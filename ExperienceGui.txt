@@ -1,4 +1,4 @@
--- ExperienceGui LocalScript (Enhanced Version)
+-- ExperienceGui LocalScript (Updated)
 -- Place this as a LocalScript in StarterPlayerScripts or use an executor
 
 local Players = game:GetService("Players")
@@ -6,7 +6,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
-local Lighting = game:GetService("Lighting")
+local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -17,7 +17,7 @@ screenGui.Name = "ExperienceGui"
 screenGui.Parent = playerGui
 screenGui.ResetOnSpawn = false
 
--- Main Frame (Modern sleek design)
+-- Main Frame (Modern dark theme with shadow)
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
 mainFrame.Size = UDim2.new(0, 0, 0, 0)
@@ -27,87 +27,92 @@ mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
 mainFrame.ClipsDescendants = true
 
--- Rounded corners for mainFrame
+-- Shadow for mainFrame (using UIStroke for glow effect)
+local shadow = Instance.new("UIStroke")
+shadow.Thickness = 2
+shadow.Color = Color3.fromRGB(0, 0, 0)
+shadow.Transparency = 0.7
+shadow.Parent = mainFrame
+
+-- Rounded corners
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 16)
 mainCorner.Parent = mainFrame
 
--- Main Gradient
+-- Gradient for mainFrame
 local mainGradient = Instance.new("UIGradient")
 mainGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 60)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 45)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
 }
-mainGradient.Rotation = 135
+mainGradient.Rotation = 45
 mainGradient.Parent = mainFrame
 
--- Shadow effect (using a duplicated frame)
-local shadowFrame = mainFrame:Clone()
-shadowFrame.Name = "Shadow"
-shadowFrame.Size = UDim2.new(1, 20, 1, 20)
-shadowFrame.Position = UDim2.new(0, -10, 0, -10)
-shadowFrame.BackgroundTransparency = 0.7
-shadowFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-shadowFrame.ZIndex = mainFrame.ZIndex - 1
-shadowFrame.Parent = mainFrame.Parent
-shadowFrame.ClipsDescendants = false
+-- Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(1, -35, 0, 5)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+closeButton.BorderSizePixel = 0
+closeButton.Text = "×"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.TextScaled = true
+closeButton.Font = Enum.Font.GothamBold
+closeButton.Parent = mainFrame
 
--- Password Frame (initially visible with slide-in animation)
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 15)
+closeCorner.Parent = closeButton
+
+-- Password Frame
 local passwordFrame = Instance.new("Frame")
 passwordFrame.Name = "PasswordFrame"
 passwordFrame.Size = UDim2.new(1, 0, 1, 0)
-passwordFrame.Position = UDim2.new(0, 0, 0, 0)
 passwordFrame.BackgroundTransparency = 1
 passwordFrame.Parent = mainFrame
 
--- Title Label with fade-in
+-- Title Label
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "TitleLabel"
 titleLabel.Size = UDim2.new(1, 0, 0, 60)
-titleLabel.Position = UDim2.new(0, 0, 0, 20)
+titleLabel.Position = UDim2.new(0, 0, 0, 40)
 titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "Enter Password to Unlock"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.GothamBold
-titleLabel.TextTransparency = 1
 titleLabel.Parent = passwordFrame
 
--- Animate title fade-in
-TweenService:Create(titleLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quart), {TextTransparency = 0}):Play()
-
--- Password TextBox with sleek design
+-- Password TextBox
 local passwordBox = Instance.new("TextBox")
 passwordBox.Name = "PasswordBox"
 passwordBox.Size = UDim2.new(0.8, 0, 0, 50)
-passwordBox.Position = UDim2.new(0.1, 0, 0, 100)
+passwordBox.Position = UDim2.new(0.1, 0, 0, 120)
 passwordBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 passwordBox.BorderSizePixel = 0
 passwordBox.Text = ""
 passwordBox.PlaceholderText = "Password..."
-passwordBox.TextColor3 = Color3.fromRGB(200, 200, 200)
+passwordBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 passwordBox.TextScaled = true
 passwordBox.Font = Enum.Font.Gotham
 passwordBox.Parent = passwordFrame
-passwordBox.TextXAlignment = Enum.TextXAlignment.Left
-passwordBox.TextTransparency = 1
 
 local passwordCorner = Instance.new("UICorner")
-passwordCorner.CornerRadius = UDim.new(0, 12)
+passwordCorner.CornerRadius = UDim.new(0, 10)
 passwordCorner.Parent = passwordBox
 
--- Animate password box slide-up
-TweenService:Create(passwordBox, TweenInfo.new(0.6, Enum.EasingStyle.Back), {
-    Position = UDim2.new(0.1, 0, 0, 90),
-    TextTransparency = 0
-}):Play()
+local passwordStroke = Instance.new("UIStroke")
+passwordStroke.Thickness = 1
+passwordStroke.Color = Color3.fromRGB(100, 100, 120)
+passwordStroke.Parent = passwordBox
 
--- Unlock Button with pulse animation
+-- Unlock Button
 local unlockButton = Instance.new("TextButton")
 unlockButton.Name = "UnlockButton"
 unlockButton.Size = UDim2.new(0.8, 0, 0, 50)
-unlockButton.Position = UDim2.new(0.1, 0, 0, 170)
-unlockButton.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+unlockButton.Position = UDim2.new(0.1, 0, 0, 200)
+unlockButton.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
 unlockButton.BorderSizePixel = 0
 unlockButton.Text = "Unlock"
 unlockButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -116,33 +121,39 @@ unlockButton.Font = Enum.Font.GothamBold
 unlockButton.Parent = passwordFrame
 
 local unlockCorner = Instance.new("UICorner")
-unlockCorner.CornerRadius = UDim.new(0, 12)
+unlockCorner.CornerRadius = UDim.new(0, 10)
 unlockCorner.Parent = unlockButton
 
--- Button animations
-local function buttonHover(button, hoverColor)
-    TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {BackgroundColor3 = hoverColor}):Play()
+local unlockStroke = Instance.new("UIStroke")
+unlockStroke.Thickness = 1
+unlockStroke.Color = Color3.fromRGB(0, 120, 200)
+unlockStroke.Parent = unlockButton
+
+-- Button hover/click animations
+local function animateButton(button, hoverColor, clickScale)
+    local hoverTween = TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor})
+    local scaleTween = TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = button.Size * clickScale})
+    
+    button.MouseEnter:Connect(function()
+        hoverTween:Play()
+    end)
+    button.MouseLeave:Connect(function()
+        hoverTween = TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = button.BackgroundColor3})
+        hoverTween:Play()
+    end)
+    button.MouseButton1Down:Connect(function()
+        scaleTween:Play()
+    end)
+    button.MouseButton1Up:Connect(function()
+        local resetScale = TweenService:Create(button, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = button.Size / clickScale})
+        resetScale:Play()
+    end)
 end
 
-unlockButton.MouseEnter:Connect(function()
-    buttonHover(unlockButton, Color3.fromRGB(120, 170, 255))
-end)
-unlockButton.MouseLeave:Connect(function()
-    buttonHover(unlockButton, Color3.fromRGB(100, 150, 255))
-end)
+animateButton(unlockButton, Color3.fromRGB(0, 120, 200), 0.95)
+animateButton(closeButton, Color3.fromRGB(200, 50, 50), 0.95)
 
--- Pulse animation for button
-spawn(function()
-    while passwordFrame.Visible do
-        TweenService:Create(unlockButton, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Size = UDim2.new(0.82, 0, 0, 52)}):Play()
-        wait(3)
-    end
-end)
-
--- Animate unlock button slide-up
-TweenService:Create(unlockButton, TweenInfo.new(0.6, Enum.EasingStyle.Back), {Position = UDim2.new(0.1, 0, 0, 160)}):Play()
-
--- Tabs Frame (initially invisible)
+-- Tabs Frame
 local tabsFrame = Instance.new("Frame")
 tabsFrame.Name = "TabsFrame"
 tabsFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -151,7 +162,7 @@ tabsFrame.BackgroundTransparency = 1
 tabsFrame.Parent = mainFrame
 tabsFrame.Visible = false
 
--- Tab Buttons Frame (Modern tab bar)
+-- Tab Buttons Frame
 local tabButtons = Instance.new("Frame")
 tabButtons.Name = "TabButtons"
 tabButtons.Size = UDim2.new(1, 0, 0, 50)
@@ -161,46 +172,46 @@ tabButtons.BorderSizePixel = 0
 tabButtons.Parent = tabsFrame
 
 local tabCorner = Instance.new("UICorner")
-tabCorner.CornerRadius = UDim.new(0, 16)
+tabCorner.CornerRadius = UDim.new(0, 0) -- Flat top
 tabCorner.Parent = tabButtons
 
--- Add tab buttons
+local tabStroke = Instance.new("UIStroke")
+tabStroke.Thickness = 1
+tabStroke.Color = Color3.fromRGB(50, 50, 60)
+tabStroke.Parent = tabButtons
+
+-- Tab buttons
 local tabs = {"Console", "Basic Needs", "Info"}
 local tabButtonsList = {}
 
 for i, tabName in ipairs(tabs) do
-    local tabButton = Instance.new("TextButton")
-    tabButton.Name = tabName .. "Tab"
-    tabButton.Size = UDim2.new(1/#tabs, 0, 1, 0)
-    tabButton.Position = UDim2.new((i-1)/#tabs, 0, 0, 0)
-    tabButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-    tabButton.BorderSizePixel = 0
-    tabButton.Text = tabName
-    tabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-    tabButton.TextScaled = true
-    tabButton.Font = Enum.Font.GothamSemibold
-    tabButton.Parent = tabButtons
+    local tabBtn = Instance.new("TextButton")
+    tabBtn.Name = tabName .. "Tab"
+    tabBtn.Size = UDim2.new(1 / #tabs, 0, 1, 0)
+    tabBtn.Position = UDim2.new((i-1) / #tabs, 0, 0, 0)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    tabBtn.BorderSizePixel = 0
+    tabBtn.Text = tabName
+    tabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tabBtn.TextScaled = true
+    tabBtn.Font = Enum.Font.GothamSemibold
+    tabBtn.Parent = tabButtons
     
-    local buttonCorner = Instance.new("UICorner")
-    buttonCorner.CornerRadius = UDim.new(0, 12)
-    buttonCorner.Parent = tabButton
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 10)
+    btnCorner.Parent = tabBtn
     
-    tabButtonsList[tabName] = tabButton
+    local btnStroke = Instance.new("UIStroke")
+    btnStroke.Thickness = 1
+    btnStroke.Color = Color3.fromRGB(60, 60, 70)
+    btnStroke.Parent = tabBtn
     
-    -- Hover effect
-    tabButton.MouseEnter:Connect(function()
-        if not tabButton.BackgroundColor3 == Color3.fromRGB(100, 150, 255) then
-            TweenService:Create(tabButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(55, 55, 65)}):Play()
-        end
-    end)
-    tabButton.MouseLeave:Connect(function()
-        if not tabButton.BackgroundColor3 == Color3.fromRGB(100, 150, 255) then
-            TweenService:Create(tabButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45, 45, 55)}):Play()
-        end
-    end)
+    tabButtonsList[tabName] = tabBtn
+    
+    animateButton(tabBtn, Color3.fromRGB(55, 55, 65), 0.98)
 end
 
--- Content Frame with scrolling
+-- Content Frame with Scrolling
 local contentFrame = Instance.new("ScrollingFrame")
 contentFrame.Name = "ContentFrame"
 contentFrame.Size = UDim2.new(1, 0, 1, -50)
@@ -208,76 +219,149 @@ contentFrame.Position = UDim2.new(0, 0, 0, 50)
 contentFrame.BackgroundTransparency = 1
 contentFrame.BorderSizePixel = 0
 contentFrame.ScrollBarThickness = 6
-contentFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 150, 255)
+contentFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 120)
 contentFrame.Parent = tabsFrame
 
 local contentLayout = Instance.new("UIListLayout")
+contentLayout.FillDirection = Enum.FillDirection.Vertical
 contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-contentLayout.Padding = UDim.new(0, 10)
+contentLayout.Padding = UDim.new(0, 0)
 contentLayout.Parent = contentFrame
 
--- Console Content (Loader as console)
+-- Individual tab contents (initially invisible)
+local tabContents = {}
+
+-- Console Tab
 local consoleContent = Instance.new("Frame")
 consoleContent.Name = "ConsoleContent"
-consoleContent.Size = UDim2.new(1, -20, 0, 400)
-consoleContent.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-consoleContent.BorderSizePixel = 0
+consoleContent.Size = UDim2.new(1, 0, 1, 0)
+consoleContent.BackgroundTransparency = 1
 consoleContent.LayoutOrder = 1
 consoleContent.Parent = contentFrame
-consoleContent.Visible = true
+consoleContent.Visible = false
 
-local consoleCorner = Instance.new("UICorner")
-consoleCorner.CornerRadius = UDim.new(0, 12)
-consoleCorner.Parent = consoleContent
+tabContents["Console"] = consoleContent
 
--- Console output text (multi-line)
-local consoleOutput = Instance.new("TextLabel")
-consoleOutput.Name = "ConsoleOutput"
-consoleOutput.Size = UDim2.new(1, 0, 1, 0)
-consoleOutput.Position = UDim2.new(0, 0, 0, 0)
-consoleOutput.BackgroundTransparency = 1
-consoleOutput.Text = "> Initializing Console...\n> Loading VapeVoidware...\n> Fetching script from GitHub...\n> Executing loader.lua...\n> Loader activated successfully!\n> Type commands below (e.g., 'help' for commands)"
-consoleOutput.TextColor3 = Color3.fromRGB(0, 255, 0)
-consoleOutput.TextScaled = false
-consoleOutput.TextSize = 14
-consoleOutput.Font = Enum.Font.Code
-consoleOutput.TextXAlignment = Enum.TextXAlignment.Left
-consoleOutput.TextYAlignment = Enum.TextYAlignment.Top
-consoleOutput.TextWrapped = true
-consoleOutput.Parent = consoleContent
+-- Console Output ScrollingFrame
+local outputFrame = Instance.new("ScrollingFrame")
+outputFrame.Name = "OutputFrame"
+outputFrame.Size = UDim2.new(1, -20, 1, -80)
+outputFrame.Position = UDim2.new(0, 10, 0, 10)
+outputFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+outputFrame.BorderSizePixel = 0
+outputFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+outputFrame.ScrollBarThickness = 4
+outputFrame.Parent = consoleContent
 
--- Simple input for console (placeholder, can expand)
-local consoleInput = Instance.new("TextBox")
-consoleInput.Size = UDim2.new(1, 0, 0, 30)
-consoleInput.Position = UDim2.new(0, 0, 1, -30)
-consoleInput.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-consoleInput.BorderSizePixel = 0
-consoleInput.Text = "> "
-consoleInput.PlaceholderText = "> Enter command..."
-consoleInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-consoleInput.TextXAlignment = Enum.TextXAlignment.Left
-consoleInput.Font = Enum.Font.Code
-consoleInput.TextSize = 14
-consoleInput.Parent = consoleContent
+local outputCorner = Instance.new("UICorner")
+outputCorner.CornerRadius = UDim.new(0, 8)
+outputCorner.Parent = outputFrame
+
+local outputLayout = Instance.new("UIListLayout")
+outputLayout.SortOrder = Enum.SortOrder.LayoutOrder
+outputLayout.Padding = UDim.new(0, 2)
+outputLayout.Parent = outputFrame
+
+-- Console Input
+local inputFrame = Instance.new("Frame")
+inputFrame.Name = "InputFrame"
+inputFrame.Size = UDim2.new(1, -20, 0, 60)
+inputFrame.Position = UDim2.new(0, 10, 1, -70)
+inputFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+inputFrame.BorderSizePixel = 0
+inputFrame.Parent = consoleContent
 
 local inputCorner = Instance.new("UICorner")
 inputCorner.CornerRadius = UDim.new(0, 8)
-inputCorner.Parent = consoleInput
+inputCorner.Parent = inputFrame
 
--- Basic Needs Content
+local inputBox = Instance.new("TextBox")
+inputBox.Size = UDim2.new(1, -80, 1, 0)
+inputBox.Position = UDim2.new(0, 10, 0, 0)
+inputBox.BackgroundTransparency = 1
+inputBox.Text = ""
+inputBox.PlaceholderText = "Enter Lua code..."
+inputBox.TextColor3 = Color3.fromRGB(200, 200, 255)
+inputBox.TextScaled = true
+inputBox.Font = Enum.Font.Code
+inputBox.MultiLine = true
+inputBox.TextYAlignment = Enum.TextYAlignment.Top
+inputBox.Parent = inputFrame
+
+local execButton = Instance.new("TextButton")
+execButton.Size = UDim2.new(0, 60, 1, 0)
+execButton.Position = UDim2.new(1, -70, 0, 0)
+execButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+execButton.BorderSizePixel = 0
+execButton.Text = "Exec"
+execButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+execButton.TextScaled = true
+execButton.Font = Enum.Font.GothamBold
+execButton.Parent = inputFrame
+
+local execCorner = Instance.new("UICorner")
+execCorner.CornerRadius = UDim.new(0, 8)
+execCorner.Parent = execButton
+
+animateButton(execButton, Color3.fromRGB(0, 120, 0), 0.95)
+
+-- Function to add console output
+local function addOutput(text, color)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -10, 0, 20)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = color or Color3.fromRGB(255, 255, 255)
+    label.TextScaled = false
+    label.TextSize = 14
+    label.Font = Enum.Font.Code
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = outputFrame
+    
+    outputFrame.CanvasSize = UDim2.new(0, 0, 0, outputLayout.AbsoluteContentSize.Y)
+    outputFrame.CanvasPosition = Vector2.new(0, outputFrame.CanvasSize.Y.Offset)
+end
+
+-- Exec functionality (simple pcall)
+execButton.MouseButton1Click:Connect(function()
+    local code = inputBox.Text
+    if code == "" then return end
+    
+    addOutput("> " .. code, Color3.fromRGB(150, 255, 150))
+    inputBox.Text = ""
+    
+    local success, result = pcall(function()
+        return loadstring(code)()
+    end)
+    
+    if success then
+        addOutput("Success", Color3.fromRGB(0, 255, 0))
+    else
+        addOutput("Error: " .. tostring(result), Color3.fromRGB(255, 100, 100))
+    end
+end)
+
+-- Basic Needs Tab
 local basicContent = Instance.new("Frame")
 basicContent.Name = "BasicContent"
-basicContent.Size = UDim2.new(1, -20, 0, 500)
+basicContent.Size = UDim2.new(1, 0, 1, 0)
 basicContent.BackgroundTransparency = 1
 basicContent.LayoutOrder = 2
-basicContent.Visible = false
 basicContent.Parent = contentFrame
+basicContent.Visible = false
 
--- Fly Button (Improved fly script)
+tabContents["Basic Needs"] = basicContent
+
+local basicLayout = Instance.new("UIListLayout")
+basicLayout.FillDirection = Enum.FillDirection.Vertical
+basicLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+basicLayout.Padding = UDim.new(0, 10)
+basicLayout.Parent = basicContent
+
+-- Fly Toggle (Fixed with character respawn handling)
 local flyButton = Instance.new("TextButton")
 flyButton.Name = "FlyButton"
-flyButton.Size = UDim2.new(0.9, 0, 0, 50)
-flyButton.Position = UDim2.new(0.05, 0, 0, 0)
+flyButton.Size = UDim2.new(0.8, 0, 0, 50)
 flyButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 flyButton.BorderSizePixel = 0
 flyButton.Text = "Fly: OFF"
@@ -287,26 +371,99 @@ flyButton.Font = Enum.Font.GothamBold
 flyButton.Parent = basicContent
 
 local flyCorner = Instance.new("UICorner")
-flyCorner.CornerRadius = UDim.new(0, 12)
+flyCorner.CornerRadius = UDim.new(0, 10)
 flyCorner.Parent = flyButton
 
--- Speed Slider (TextBox for mobile)
+local flyStroke = Instance.new("UIStroke")
+flyStroke.Thickness = 1
+flyStroke.Color = Color3.fromRGB(200, 50, 50)
+flyStroke.Parent = flyButton
+
+animateButton(flyButton, Color3.fromRGB(200, 50, 50), 0.95)
+
+local flying = false
+local flyConnection = nil
+local flySpeed = 50
+local bodyVelocity, bodyAngularVelocity = nil, nil
+
+local function updateFly()
+    local character = player.Character
+    if not character then return end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    
+    if flying then
+        bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.Parent = rootPart
+        
+        bodyAngularVelocity = Instance.new("BodyAngularVelocity")
+        bodyAngularVelocity.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+        bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
+        bodyAngularVelocity.Parent = rootPart
+        
+        flyConnection = RunService.Heartbeat:Connect(function()
+            if not flying or not character or not rootPart then
+                if flyConnection then flyConnection:Disconnect() end
+                return
+            end
+            
+            local camera = workspace.CurrentCamera
+            local moveDir = Humanoid.MoveDirection
+            local lookDir = camera.CFrame.LookVector
+            local rightDir = camera.CFrame.RightVector
+            
+            local velocity = Vector3.new(0, 0, 0)
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then velocity = velocity + lookDir end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then velocity = velocity - lookDir end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then velocity = velocity - rightDir end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then velocity = velocity + rightDir end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then velocity = velocity + Vector3.new(0, 1, 0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then velocity = velocity - Vector3.new(0, 1, 0) end
+            
+            bodyVelocity.Velocity = velocity.Unit * flySpeed
+        end)
+    else
+        if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
+        if bodyAngularVelocity then bodyAngularVelocity:Destroy() bodyAngularVelocity = nil end
+        if flyConnection then flyConnection:Disconnect() flyConnection = nil end
+    end
+end
+
+local function toggleFly()
+    flying = not flying
+    flyButton.Text = "Fly: " .. (flying and "ON" or "OFF")
+    flyButton.BackgroundColor3 = flying and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    flyStroke.Color = flying and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    updateFly()
+end
+
+flyButton.MouseButton1Click:Connect(toggleFly)
+
+-- Handle character respawn
+player.CharacterAdded:Connect(function()
+    if flying then
+        wait(1) -- Wait for character to load
+        updateFly()
+    end
+end)
+
+-- Speed Slider (using TextBox for mobile)
 local speedFrame = Instance.new("Frame")
-speedFrame.Name = "SpeedFrame"
-speedFrame.Size = UDim2.new(0.9, 0, 0, 60)
-speedFrame.Position = UDim2.new(0.05, 0, 0, 60)
+speedFrame.Size = UDim2.new(0.8, 0, 0, 60)
 speedFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 speedFrame.BorderSizePixel = 0
 speedFrame.Parent = basicContent
 
 local speedCorner = Instance.new("UICorner")
-speedCorner.CornerRadius = UDim.new(0, 12)
+speedCorner.CornerRadius = UDim.new(0, 10)
 speedCorner.Parent = speedFrame
 
 local speedLabel = Instance.new("TextLabel")
 speedLabel.Size = UDim2.new(1, 0, 0.5, 0)
 speedLabel.BackgroundTransparency = 1
-speedLabel.Text = "Walk Speed"
+speedLabel.Text = "Walk Speed: 16"
 speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 speedLabel.TextScaled = true
 speedLabel.Font = Enum.Font.Gotham
@@ -317,29 +474,34 @@ speedInput.Size = UDim2.new(1, 0, 0.5, 0)
 speedInput.Position = UDim2.new(0, 0, 0.5, 0)
 speedInput.BackgroundTransparency = 1
 speedInput.Text = "16"
-speedInput.PlaceholderText = "Speed (16 default)"
 speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 speedInput.TextScaled = true
 speedInput.Font = Enum.Font.Gotham
 speedInput.Parent = speedFrame
 
--- Jump Power
+speedInput.FocusLost:Connect(function()
+    local speed = math.clamp(tonumber(speedInput.Text) or 16, 0, 500)
+    speedInput.Text = tostring(speed)
+    speedLabel.Text = "Walk Speed: " .. speed
+    local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+    if humanoid then humanoid.WalkSpeed = speed end
+end)
+
+-- Jump Power similar
 local jumpFrame = Instance.new("Frame")
-jumpFrame.Name = "JumpFrame"
-jumpFrame.Size = UDim2.new(0.9, 0, 0, 60)
-jumpFrame.Position = UDim2.new(0.05, 0, 0, 130)
+jumpFrame.Size = UDim2.new(0.8, 0, 0, 60)
 jumpFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 jumpFrame.BorderSizePixel = 0
 jumpFrame.Parent = basicContent
 
 local jumpCorner = Instance.new("UICorner")
-jumpCorner.CornerRadius = UDim.new(0, 12)
+jumpCorner.CornerRadius = UDim.new(0, 10)
 jumpCorner.Parent = jumpFrame
 
 local jumpLabel = Instance.new("TextLabel")
 jumpLabel.Size = UDim2.new(1, 0, 0.5, 0)
 jumpLabel.BackgroundTransparency = 1
-jumpLabel.Text = "Jump Power"
+jumpLabel.Text = "Jump Power: 50"
 jumpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 jumpLabel.TextScaled = true
 jumpLabel.Font = Enum.Font.Gotham
@@ -350,17 +512,23 @@ jumpInput.Size = UDim2.new(1, 0, 0.5, 0)
 jumpInput.Position = UDim2.new(0, 0, 0.5, 0)
 jumpInput.BackgroundTransparency = 1
 jumpInput.Text = "50"
-jumpInput.PlaceholderText = "Jump (50 default)"
 jumpInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 jumpInput.TextScaled = true
 jumpInput.Font = Enum.Font.Gotham
 jumpInput.Parent = jumpFrame
 
+jumpInput.FocusLost:Connect(function()
+    local jump = math.clamp(tonumber(jumpInput.Text) or 50, 0, 500)
+    jumpInput.Text = tostring(jump)
+    jumpLabel.Text = "Jump Power: " .. jump
+    local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+    if humanoid then humanoid.JumpPower = jump end
+end)
+
 -- Noclip Toggle
 local noclipButton = Instance.new("TextButton")
 noclipButton.Name = "NoclipButton"
-noclipButton.Size = UDim2.new(0.9, 0, 0, 50)
-noclipButton.Position = UDim2.new(0.05, 0, 0, 200)
+noclipButton.Size = UDim2.new(0.8, 0, 0, 50)
 noclipButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 noclipButton.BorderSizePixel = 0
 noclipButton.Text = "Noclip: OFF"
@@ -370,17 +538,49 @@ noclipButton.Font = Enum.Font.GothamBold
 noclipButton.Parent = basicContent
 
 local noclipCorner = Instance.new("UICorner")
-noclipCorner.CornerRadius = UDim.new(0, 12)
+noclipCorner.CornerRadius = UDim.new(0, 10)
 noclipCorner.Parent = noclipButton
 
+local noclipStroke = Instance.new("UIStroke")
+noclipStroke.Thickness = 1
+noclipStroke.Color = Color3.fromRGB(200, 50, 50)
+noclipStroke.Parent = noclipButton
+
 local noclipping = false
-local noclipConnection
+local noclipConnection = nil
+
+noclipButton.MouseButton1Click:Connect(function()
+    noclipping = not noclipping
+    noclipButton.Text = "Noclip: " .. (noclipping and "ON" or "OFF")
+    noclipButton.BackgroundColor3 = noclipping and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    noclipStroke.Color = noclipping and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    
+    if noclipping then
+        noclipConnection = RunService.Stepped:Connect(function()
+            if player.Character then
+                for _, part in ipairs(player.Character:GetChildren()) do
+                    if part:IsA("BasePart") and part.CanCollide then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    else
+        if noclipConnection then noclipConnection:Disconnect() noclipConnection = nil end
+        if player.Character then
+            for _, part in ipairs(player.Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end)
 
 -- Infinite Jump Toggle
 local infJumpButton = Instance.new("TextButton")
 infJumpButton.Name = "InfJumpButton"
-infJumpButton.Size = UDim2.new(0.9, 0, 0, 50)
-infJumpButton.Position = UDim2.new(0.05, 0, 0, 270)
+infJumpButton.Size = UDim2.new(0.8, 0, 0, 50)
 infJumpButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 infJumpButton.BorderSizePixel = 0
 infJumpButton.Text = "Infinite Jump: OFF"
@@ -390,293 +590,231 @@ infJumpButton.Font = Enum.Font.GothamBold
 infJumpButton.Parent = basicContent
 
 local infJumpCorner = Instance.new("UICorner")
-infJumpCorner.CornerRadius = UDim.new(0, 12)
+infJumpCorner.CornerRadius = UDim.new(0, 10)
 infJumpCorner.Parent = infJumpButton
 
-local infJumping = false
+animateButton(infJumpButton, Color3.fromRGB(200, 50, 50), 0.95)
 
--- Info Content
+local infJumping = false
+local infJumpConnection = nil
+
+infJumpButton.MouseButton1Click:Connect(function()
+    infJumping = not infJumping
+    infJumpButton.Text = "Infinite Jump: " .. (infJumping and "ON" or "OFF")
+    infJumpButton.BackgroundColor3 = infJumping and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    
+    if infJumping then
+        infJumpConnection = UserInputService.JumpRequest:Connect(function()
+            local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    else
+        if infJumpConnection then infJumpConnection:Disconnect() infJumpConnection = nil end
+    end
+end)
+
+-- God Mode Toggle (simple health regen)
+local godButton = Instance.new("TextButton")
+godButton.Name = "GodButton"
+godButton.Size = UDim2.new(0.8, 0, 0, 50)
+godButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+godButton.BorderSizePixel = 0
+godButton.Text = "God Mode: OFF"
+godButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+godButton.TextScaled = true
+godButton.Font = Enum.Font.GothamBold
+godButton.Parent = basicContent
+
+local godCorner = Instance.new("UICorner")
+godCorner.CornerRadius = UDim.new(0, 10)
+godCorner.Parent = godButton
+
+animateButton(godButton, Color3.fromRGB(200, 50, 50), 0.95)
+
+local godMode = false
+local godConnection = nil
+
+godButton.MouseButton1Click:Connect(function()
+    godMode = not godMode
+    godButton.Text = "God Mode: " .. (godMode and "ON" or "OFF")
+    godButton.BackgroundColor3 = godMode and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    
+    if godMode then
+        godConnection = RunService.Heartbeat:Connect(function()
+            local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+            if humanoid and humanoid.Health < humanoid.MaxHealth then
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end)
+    else
+        if godConnection then godConnection:Disconnect() godConnection = nil end
+    end
+end)
+
+-- Info Tab
 local infoContent = Instance.new("Frame")
 infoContent.Name = "InfoContent"
-infoContent.Size = UDim2.new(1, -20, 0, 400)
+infoContent.Size = UDim2.new(1, 0, 1, 0)
 infoContent.BackgroundTransparency = 1
 infoContent.LayoutOrder = 3
-infoContent.Visible = false
 infoContent.Parent = contentFrame
+infoContent.Visible = false
+
+tabContents["Info"] = infoContent
 
 local infoLayout = Instance.new("UIListLayout")
-infoLayout.SortOrder = Enum.SortOrder.LayoutOrder
-infoLayout.Padding = UDim.new(0, 5)
+infoLayout.FillDirection = Enum.FillDirection.Vertical
+infoLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+infoLayout.Padding = UDim.new(0, 10)
 infoLayout.Parent = infoContent
 
--- Player Info Label
-local playerInfo = Instance.new("TextLabel")
-playerInfo.Size = UDim2.new(1, 0, 0, 100)
-playerInfo.BackgroundTransparency = 1
-playerInfo.Text = string.format("Player: %s\nUser ID: %d\nDisplay Name: %s\nTeam: %s\nHealth: %.1f / %.1f", 
-    player.Name, player.UserId, player.DisplayName, player.Team and player.Team.Name or "None", 
-    player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health or 0, 
-    player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.MaxHealth or 0)
-playerInfo.TextColor3 = Color3.fromRGB(255, 255, 255)
-playerInfo.TextScaled = true
-playerInfo.Font = Enum.Font.Gotham
-playerInfo.TextXAlignment = Enum.TextXAlignment.Left
-playerInfo.TextYAlignment = Enum.TextYAlignment.Top
-playerInfo.TextWrapped = true
-playerInfo.Parent = infoContent
+-- Player Info Labels
+local playerNameLabel = Instance.new("TextLabel")
+playerNameLabel.Size = UDim2.new(0.8, 0, 0, 40)
+playerNameLabel.BackgroundTransparency = 1
+playerNameLabel.Text = "Player Name: " .. player.Name
+playerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+playerNameLabel.TextScaled = true
+playerNameLabel.Font = Enum.Font.Gotham
+playerNameLabel.Parent = infoContent
 
--- Client Info Label
-local clientInfo = Instance.new("TextLabel")
-clientInfo.Size = UDim2.new(1, 0, 0, 100)
-clientInfo.BackgroundTransparency = 1
-clientInfo.Text = "Client Info:\nFPS: Calculating...\nPing: N/A\nDevice: Unknown"
-clientInfo.TextColor3 = Color3.fromRGB(255, 255, 255)
-clientInfo.TextScaled = true
-clientInfo.Font = Enum.Font.Gotham
-clientInfo.TextXAlignment = Enum.TextXAlignment.Left
-clientInfo.TextYAlignment = Enum.TextYAlignment.Top
-clientInfo.TextWrapped = true
-clientInfo.Parent = infoContent
+local userIdLabel = Instance.new("TextLabel")
+userIdLabel.Size = UDim2.new(0.8, 0, 0, 40)
+userIdLabel.BackgroundTransparency = 1
+userIdLabel.Text = "User ID: " .. player.UserId
+userIdLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+userIdLabel.TextScaled = true
+userIdLabel.Font = Enum.Font.Gotham
+userIdLabel.Parent = infoContent
 
--- FPS calculation
+local displayNameLabel = Instance.new("TextLabel")
+displayNameLabel.Size = UDim2.new(0.8, 0, 0, 40)
+displayNameLabel.BackgroundTransparency = 1
+displayNameLabel.Text = "Display Name: " .. (player.DisplayName or "N/A")
+displayNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+displayNameLabel.TextScaled = true
+displayNameLabel.Font = Enum.Font.Gotham
+displayNameLabel.Parent = infoContent
+
+-- FPS Label
+local fpsLabel = Instance.new("TextLabel")
+fpsLabel.Size = UDim2.new(0.8, 0, 0, 40)
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.Text = "FPS: Calculating..."
+fpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+fpsLabel.TextScaled = true
+fpsLabel.Font = Enum.Font.Gotham
+fpsLabel.Parent = infoContent
+
 local lastTime = tick()
 local frameCount = 0
 RunService.Heartbeat:Connect(function()
     frameCount = frameCount + 1
     if tick() - lastTime >= 1 then
-        local fps = frameCount / (tick() - lastTime)
-        clientInfo.Text = clientInfo.Text:gsub("FPS: Calculating...", string.format("FPS: %.0f", fps))
+        fpsLabel.Text = "FPS: " .. math.floor(frameCount / (tick() - lastTime))
         frameCount = 0
         lastTime = tick()
     end
 end)
 
--- Supported Games Label
+-- Supported Games
 local gamesLabel = Instance.new("TextLabel")
-gamesLabel.Size = UDim2.new(1, 0, 0, 150)
+gamesLabel.Size = UDim2.new(0.8, 0, 0, 100)
 gamesLabel.BackgroundTransparency = 1
-gamesLabel.Text = "Supported Games (Auto-Script Execution):\n- 99 Nights in the Forest\n- Ink Game\n- Forsaken"
-gamesLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+gamesLabel.Text = "Supported Games (Auto-Script):\n- 99 Nights in the Forest\n- Ink Game\n- Forsaken"
+gamesLabel.TextColor3 = Color3.fromRGB(200, 200, 255)
 gamesLabel.TextScaled = true
-gamesLabel.Font = Enum.Font.GothamBold
-gamesLabel.TextXAlignment = Enum.TextXAlignment.Left
 gamesLabel.TextYAlignment = Enum.TextYAlignment.Top
-gamesLabel.TextWrapped = true
+gamesLabel.Font = Enum.Font.Gotham
 gamesLabel.Parent = infoContent
 
--- Fly variables (Improved for better compatibility)
-local flying = false
-local flySpeed = 50
-local flyConnection
-local bg = nil
-local bv = nil
+-- Tab switching with animations
+local currentTab = nil
 
-local function createFly()
-    local char = player.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    local humanoid = char:FindFirstChild("Humanoid")
-    if not humanoid then return end
-    
-    flying = true
-    flyButton.Text = "Fly: ON"
-    flyButton.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
-    
-    bg = Instance.new("BodyGyro")
-    bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-    bg.P = 9e4
-    bg.Parent = char.HumanoidRootPart
-    
-    bv = Instance.new("BodyVelocity")
-    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-    bv.Velocity = Vector3.new(0, 0, 0)
-    bv.Parent = char.HumanoidRootPart
-    
-    flyConnection = RunService.Heartbeat:Connect(function()
-        if not flying or not char or not char:FindFirstChild("HumanoidRootPart") then return end
-        
-        local cam = workspace.CurrentCamera
-        local move = humanoid.MoveDirection
-        if move.Magnitude < 0.1 then move = Vector3.new(0, 0, 0) end
-        
-        local vel = cam.CFrame:VectorToWorldSpace(move)
-        vel = Vector3.new(vel.X * flySpeed, 0, vel.Z * flySpeed)
-        
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) or UserInputService:IsKeyDown(Enum.KeyCode.E) then
-            vel = vel + Vector3.new(0, flySpeed, 0)
-        elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService:IsKeyDown(Enum.KeyCode.Q) then
-            vel = vel - Vector3.new(0, flySpeed, 0)
-        end
-        
-        bg.CFrame = cam.CFrame
-        bv.Velocity = vel
-    end)
-end
-
-local function stopFly()
-    flying = false
-    flyButton.Text = "Fly: OFF"
-    flyButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    
-    if flyConnection then flyConnection:Disconnect() end
-    if bg then bg:Destroy() end
-    if bv then bv:Destroy() end
-end
-
-flyButton.MouseButton1Click:Connect(function()
-    if player.Character then
-        if flying then
-            stopFly()
-        else
-            createFly()
-        end
-    end
-end)
-
--- Noclip
-noclipButton.MouseButton1Click:Connect(function()
-    noclipping = not noclipping
-    noclipButton.Text = "Noclip: " .. (noclipping and "ON" or "OFF")
-    noclipButton.BackgroundColor3 = noclipping and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-    
-    if noclipping then
-        noclipConnection = RunService.Stepped:Connect(function()
-            if player.Character then
-                for _, part in pairs(player.Character:GetChildren()) do
-                    if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                        part.CanCollide = false
-                    end
-                end
-            end
-        end)
-    else
-        if noclipConnection then noclipConnection:Disconnect() end
-        if player.Character then
-            for _, part in pairs(player.Character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
-            end
-        end
-    end
-end)
-
--- Infinite Jump
-infJumpButton.MouseButton1Click:Connect(function()
-    infJumping = not infJumping
-    infJumpButton.Text = "Infinite Jump: " .. (infJumping and "ON" or "OFF")
-    infJumpButton.BackgroundColor3 = infJumping and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-end)
-
-UserInputService.JumpRequest:Connect(function()
-    if infJumping and player.Character then
-        local humanoid = player.Character:FindFirstChild("Humanoid")
-        if humanoid then
-            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end
-end)
-
--- Speed and Jump updates
-local function updateStats()
-    local char = player.Character
-    if char then
-        local hum = char:FindFirstChild("Humanoid")
-        if hum then
-            local speed = tonumber(speedInput.Text) or 16
-            hum.WalkSpeed = speed
-            local jump = tonumber(jumpInput.Text) or 50
-            hum.JumpPower = jump
-        end
-    end
-end
-
-speedInput.FocusLost:Connect(updateStats)
-jumpInput.FocusLost:Connect(updateStats)
-
--- Tab switching with slide animation
-local currentContent = consoleContent
 local function switchTab(tabName)
-    for _, content in pairs(contentFrame:GetChildren()) do
-        if content:IsA("Frame") then
-            content.Visible = false
-            TweenService:Create(content, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Size = UDim2.new(1, -20, 0, 0)}):Play()
-        end
+    if currentTab == tabName then return end
+    currentTab = tabName
+    
+    -- Hide all
+    for _, content in pairs(tabContents) do
+        content.Visible = false
+        local tweenOut = TweenService:Create(content, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 0)})
+        tweenOut:Play()
     end
     
-    local targetContent = (tabName == "Console" and consoleContent) or (tabName == "Basic Needs" and basicContent) or infoContent
-    targetContent.Visible = true
-    TweenService:Create(targetContent, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = targetContent.Size}):Play()
-    currentContent = targetContent
+    -- Show selected
+    local content = tabContents[tabName]
+    content.Visible = true
+    local tweenIn = TweenService:Create(content, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(1, 0, 1, 0)})
+    tweenIn:Play()
     
-    for tab, button in pairs(tabButtonsList) do
-        button.BackgroundColor3 = (tab == tabName) and Color3.fromRGB(100, 150, 255) or Color3.fromRGB(45, 45, 55)
-        button.TextColor3 = (tab == tabName) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
+    -- Update tab buttons
+    for name, btn in pairs(tabButtonsList) do
+        btn.TextColor3 = (name == tabName) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
+        btn.BackgroundColor3 = (name == tabName) and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(45, 45, 55)
+        local btnTween = TweenService:Create(btn, TweenInfo.new(0.2), {Size = UDim2.new(1 / #tabs + (name == tabName and 0.01 or 0), 0, 1, 0)})
+        btnTween:Play()
     end
 end
 
-for tabName, button in pairs(tabButtonsList) do
-    button.MouseButton1Click:Connect(function()
+for tabName, btn in pairs(tabButtonsList) do
+    btn.MouseButton1Click:Connect(function()
         switchTab(tabName)
     end)
 end
 
--- Unlock logic with enhanced animation
+-- Unlock logic
 unlockButton.MouseButton1Click:Connect(function()
     if passwordBox.Text == "CoolDownExperience" then
-        -- Run the loader (console already shows message)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
+        -- Run the original loader
+        local success, err = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
+        end)
+        if success then
+            addOutput("External Loader Executed Successfully", Color3.fromRGB(0, 255, 0))
+        else
+            addOutput("External Loader Error: " .. tostring(err), Color3.fromRGB(255, 100, 100))
+        end
         
-        -- Hide password, show tabs
-        TweenService:Create(passwordFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Position = UDim2.new(0, 0, -1, 0)}):Play()
-        wait(0.4)
+        -- Switch to UI
         passwordFrame.Visible = false
         tabsFrame.Visible = true
-        
-        -- Expand main frame with sleek animation
-        TweenService:Create(mainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 500, 0, 400)
-        }):Play()
-        
-        -- Slide in tabs
-        TweenService:Create(tabButtons, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Position = UDim2.new(0, 0, 0, 0)}):Play()
         switchTab("Console")
+        
+        -- Sleek expand animation
+        local expandTween = TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, 500, 0, 400),
+            Position = UDim2.new(0.5, -250, 0.5, -200)
+        })
+        expandTween:Play()
+        
+        -- Add initial console output
+        addOutput("Console Initialized. Type Lua code to execute.", Color3.fromRGB(150, 150, 255))
     else
-        -- Shake animation for wrong password
-        local originalPos = passwordBox.Position
-        TweenService:Create(passwordBox, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 0, false), {Position = UDim2.new(0.1, -10, 0, 90)}):Play()
-        wait(0.05)
-        TweenService:Create(passwordBox, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 0, false), {Position = UDim2.new(0.1, 10, 0, 90)}):Play()
-        wait(0.05)
-        TweenService:Create(passwordBox, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 0, false), {Position = originalPos}):Play()
+        -- Shake animation
+        local shakeTween = TweenService:Create(passwordBox, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 4, true), {
+            Position = UDim2.new(0.1, math.random(-10,10), 0, 120)
+        })
+        shakeTween:Play()
+        passwordBox.Text = ""
     end
+end)
+
+-- Close button
+closeButton.MouseButton1Click:Connect(function()
+    -- Clean up connections if needed
+    if flyConnection then flyConnection:Disconnect() end
+    if noclipConnection then noclipConnection:Disconnect() end
+    if infJumpConnection then infJumpConnection:Disconnect() end
+    if godConnection then godConnection:Disconnect() end
+    screenGui:Destroy()
 end)
 
 -- Initial entrance animation
-mainFrame.Size = UDim2.new(0, 0, 0, 0)
-TweenService:Create(mainFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+local entranceTween = TweenService:Create(mainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back), {
     Size = UDim2.new(0, 350, 0, 280),
     Position = UDim2.new(0.5, -175, 0.5, -140)
-}):Play()
-
--- Update player info periodically
-spawn(function()
-    while true do
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            playerInfo.Text = string.format("Player: %s\nUser ID: %d\nDisplay Name: %s\nTeam: %s\nHealth: %.1f / %.1f", 
-                player.Name, player.UserId, player.DisplayName, player.Team and player.Team.Name or "None", 
-                player.Character.Humanoid.Health, player.Character.Humanoid.MaxHealth)
-        end
-        wait(1)
-    end
-end)
-
--- Cleanup on character respawn
-player.CharacterAdded:Connect(function()
-    stopFly()
-    if noclipping then
-        noclipping = false
-        noclipButton.Text = "Noclip: OFF"
-        noclipButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    end
-    updateStats()
-end)
+})
+entranceTween:Play()
