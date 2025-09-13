@@ -1,4 +1,4 @@
--- ExperienceGui LocalScript (Updated)
+-- ExperienceGui LocalScript (Updated - Fixed Fly Error)
 -- Place this as a LocalScript in StarterPlayerScripts or use an executor
 
 local Players = game:GetService("Players")
@@ -410,7 +410,6 @@ local function updateFly()
             end
             
             local camera = workspace.CurrentCamera
-            local moveDir = Humanoid.MoveDirection
             local lookDir = camera.CFrame.LookVector
             local rightDir = camera.CFrame.RightVector
             
