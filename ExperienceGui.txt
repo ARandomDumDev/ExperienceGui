@@ -1,218 +1,84 @@
--- ExperienceGui with simple fly + passcode gate
+-- Load Rayfield library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+-- Create main window with key system (password gating)
+local Window = Rayfield:CreateWindow({
+    Name = "CoolDown's Experience",
+    Icon = 0,
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "Please wait",
+    ShowText = "CoolDown",
+    ToggleUIKeybind = "K",
+    Theme = "Default",
+    KeySystem = true,
+    KeySettings = {
+        Title = "Password Required",
+        Subtitle = "Enter password to continue",
+        FileName = "CoolDownKey",
+        SaveKey = false,
+        GrabKeyFromSite = false,
+        Key = {"CoolDownExperience"}
+    }
+})
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+-- Get player and character info
+local player = game:GetService("Players").LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 
--- CONFIG
-local PASSCODE = "CoolDownExperience"
+-- Home Tab (welcome message and credits)
+local homeTab = Window:CreateTab("Home", 0)
+homeTab:CreateParagraph({
+    Title = "Welcome",
+    Content = "Welcome to the CoolDown Experience GUI!\nScript by CoolDown"
+})
 
--- State
-local guiUnlocked = false
-local flying = false
-local flySpeed = 50  -- default fly speed
+-- Client Info Tab (player name, display name, user ID)
+local clientTab = Window:CreateTab("Client Info", 0)
+clientTab:CreateLabel("Name: " .. player.Name, 0, Color3.fromRGB(255,255,255), false)
+clientTab:CreateLabel("Display Name: " .. player.DisplayName, 0, Color3.fromRGB(255,255,255), false)
+clientTab:CreateLabel("User ID: " .. player.UserId, 0, Color3.fromRGB(255,255,255), false)
 
--- Utility: make sure GUI only appears after passcode
--- Build the GUI (simplified for fly toggle + passcode + main frame)
+-- Executor Info Tab (identifyexecutor result)
+local execTab = Window:CreateTab("Executor Info", 0)
+execTab:CreateLabel("Executor: " .. (identifyexecutor and identifyexecutor() or "Unknown"), 0, Color3.fromRGB(255,255,255), false)
 
--- Destroy old if exists
-local existing = playerGui:FindFirstChild("ExperienceGui")
-if existing then existing:Destroy() end
+-- User Info Tab (account age, premium status)
+local userTab = Window:CreateTab("User Info", 0)
+userTab:CreateLabel("Account Age: " .. player.AccountAge .. " days", 0, Color3.fromRGB(255,255,255), false)
+local hasPremium = (player.MembershipType == Enum.MembershipType.Premium)
+userTab:CreateLabel("Premium: " .. (hasPremium and "Yes" or "No"), 0, Color3.fromRGB(255,255,255), false)
 
--- ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "ExperienceGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
+-- Basic Needs Tab (WalkSpeed, JumpPower, Fly)
+local basicTab = Window:CreateTab("Basic Needs", 0)
+basicTab:CreateSlider({
+    Name = "WalkSpeed",
+    Range = {0, 300},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = humanoid.WalkSpeed,
+    Flag = "WalkSpeed",
+    Callback = function(value)
+        humanoid.WalkSpeed = value
+    end,
+})
+basicTab:CreateSlider({
+    Name = "JumpPower",
+    Range = {0, 200},
+    Increment = 1,
+    Suffix = "Power",
+    CurrentValue = humanoid.JumpPower,
+    Flag = "JumpPower",
+    Callback = function(value)
+        humanoid.JumpPower = value
+    end,
+})
+basicTab:CreateButton({
+    Name = "Fly Script",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt", true))()
+    end,
+})
 
--- Main frame (hidden initially by passOverlay)
-local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 400, 0, 300)
-mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30,30,40)
-mainFrame.BorderSizePixel = 0
-mainFrame.Visible = false  -- hidden until unlock
-mainFrame.Parent = screenGui
-
--- Fly Button inside mainFrame
-local flyBtn = Instance.new("TextButton")
-flyBtn.Name = "FlyToggle"
-flyBtn.Size = UDim2.new(0, 120, 0, 40)
-flyBtn.Position = UDim2.new(0.5, -60, 0.2, 0)
-flyBtn.BackgroundColor3 = Color3.fromRGB(0,150,255)
-flyBtn.Text = "Fly: OFF"
-flyBtn.TextColor3 = Color3.fromRGB(255,255,255)
-flyBtn.Font = Enum.Font.GothamBold
-flyBtn.TextSize = 20
-flyBtn.Parent = mainFrame
-
--- Speed input inside mainFrame
-local speedLabel = Instance.new("TextLabel")
-speedLabel.Name = "SpeedLabel"
-speedLabel.Size = UDim2.new(0, 200, 0, 30)
-speedLabel.Position = UDim2.new(0.5, -100, 0.4, 0)
-speedLabel.BackgroundTransparency = 1
-speedLabel.Text = "Fly Speed: "..flySpeed
-speedLabel.TextColor3 = Color3.fromRGB(255,255,255)
-speedLabel.Font = Enum.Font.Gotham
-speedLabel.TextSize = 18
-speedLabel.Parent = mainFrame
-
-local speedInput = Instance.new("TextBox")
-speedInput.Name = "SpeedInput"
-speedInput.Size = UDim2.new(0, 200, 0, 30)
-speedInput.Position = UDim2.new(0.5, -100, 0.5, 0)
-speedInput.BackgroundColor3 = Color3.fromRGB(40,40,50)
-speedInput.Text = tostring(flySpeed)
-speedInput.TextColor3 = Color3.fromRGB(255,255,255)
-speedInput.Font = Enum.Font.Code
-speedInput.TextSize = 18
-speedInput.ClearTextOnFocus = false
-speedInput.Parent = mainFrame
-
--- Passcode overlay
-local passOverlay = Instance.new("Frame")
-passOverlay.Name = "PassOverlay"
-passOverlay.Size = UDim2.new(1,0,1,0)
-passOverlay.Position = UDim2.new(0,0,0,0)
-passOverlay.BackgroundColor3 = Color3.fromRGB(20,20,30)
-passOverlay.BackgroundTransparency = 0.9
-passOverlay.Parent = screenGui
-
-local passBox = Instance.new("TextBox")
-passBox.Name = "PassBox"
-passBox.Size = UDim2.new(0, 200, 0, 40)
-passBox.Position = UDim2.new(0.5, -100, 0.4, 0)
-passBox.BackgroundColor3 = Color3.fromRGB(40,40,50)
-passBox.Text = ""
-passBox.PlaceholderText = "Password..."
-passBox.TextColor3 = Color3.fromRGB(255,255,255)
-passBox.Font = Enum.Font.Code
-passBox.TextSize = 20
-passBox.ClearTextOnFocus = false
-passBox.Parent = passOverlay
-
-local unlockBtn = Instance.new("TextButton")
-unlockBtn.Name = "UnlockBtn"
-unlockBtn.Size = UDim2.new(0, 200, 0, 40)
-unlockBtn.Position = UDim2.new(0.5, -100, 0.5, 0)
-unlockBtn.BackgroundColor3 = Color3.fromRGB(0,200,120)
-unlockBtn.Text = "Unlock"
-unlockBtn.TextColor3 = Color3.fromRGB(255,255,255)
-unlockBtn.Font = Enum.Font.GothamBold
-unlockBtn.TextSize = 20
-unlockBtn.Parent = passOverlay
-
-local messageLabel = Instance.new("TextLabel")
-messageLabel.Name = "Msg"
-messageLabel.Size = UDim2.new(0,200,0,30)
-messageLabel.Position = UDim2.new(0.5, -100, 0.6, 0)
-messageLabel.BackgroundTransparency = 1
-messageLabel.Text = ""
-messageLabel.TextColor3 = Color3.fromRGB(255,100,100)
-messageLabel.Font = Enum.Font.Gotham
-messageLabel.TextSize = 18
-messageLabel.Parent = passOverlay
-
--- Fly implementation (simple version)
-local rootPart
-local humanoid
-
-local function getCharacterParts()
-    local char = player.Character or player.CharacterAdded:Wait()
-    rootPart = char:WaitForChild("HumanoidRootPart")
-    humanoid = char:FindFirstChildWhichIsA("Humanoid")
-end
-
-getCharacterParts()
-player.CharacterAdded:Connect(getCharacterParts)
-
--- Function to toggle fly
-local function toggleFly()
-    flying = not flying
-    if flying then
-        flyBtn.Text = "Fly: ON"
-        if humanoid then
-            humanoid.PlatformStand = true
-        end
-    else
-        flyBtn.Text = "Fly: OFF"
-        if humanoid then
-            humanoid.PlatformStand = false
-        end
-        if rootPart then
-            rootPart.Velocity = Vector3.new(0,0,0)
-        end
-    end
-end
-
--- Movement loop
-RunService.Heartbeat:Connect(function(delta)
-    if flying and rootPart then
-        local mv = Vector3.new(0,0,0)
-        -- WASD movement
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then mv = mv + workspace.CurrentCamera.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then mv = mv - workspace.CurrentCamera.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then mv = mv - workspace.CurrentCamera.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then mv = mv + workspace.CurrentCamera.CFrame.RightVector end
-        -- Up / Down
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then mv = mv + Vector3.new(0,1,0) end
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then mv = mv + Vector3.new(0,-1,0) end
-
-        if mv.Magnitude > 0 then
-            -- move
-            rootPart.Velocity = mv.Unit * flySpeed
-        else
-            rootPart.Velocity = Vector3.new(0,0,0)
-        end
-    end
-end)
-
--- Connect fly toggle GUI
-flyBtn.MouseButton1Click:Connect(function()
-    if not guiUnlocked then return end
-    toggleFly()
-end)
-
--- Speed input change
-speedInput.FocusLost:Connect(function(enter)
-    if enter then
-        local num = tonumber(speedInput.Text)
-        if num and num > 0 then
-            flySpeed = num
-            speedLabel.Text = "Fly Speed: "..flySpeed
-        else
-            speedInput.Text = tostring(flySpeed)
-        end
-    end
-end)
-
--- Unlock logic
-unlockBtn.MouseButton1Click:Connect(function()
-    if passBox.Text == PASSCODE then
-        guiUnlocked = true
-        mainFrame.Visible = true
-        passOverlay:Destroy()
-    else
-        messageLabel.Text = "Wrong password."
-        passBox.Text = ""
-    end
-end)
-passBox.FocusLost:Connect(function(enter)
-    if enter then
-        if passBox.Text == PASSCODE then
-            guiUnlocked = true
-            mainFrame.Visible = true
-            passOverlay:Destroy()
-        else
-            messageLabel.Text = "Wrong password."
-            passBox.Text = ""
-        end
-    end
-end)
-
--- Initially GUI hidden until unlocked
+-- Auto-run VW-Add loader after password is verified
+loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
