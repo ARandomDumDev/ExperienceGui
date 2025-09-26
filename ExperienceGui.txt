@@ -1,71 +1,19 @@
 --// ExperienceGui Loader
---// Password: CoolDownExperience
+--// Made by CoolDown
+--// Password = CoolDownExperience
 
--- Services
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Password Prompt
-local PASSWORD = "CoolDownExperience"
-local input = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
+-- Load Rayfield
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
-local function requestPassword()
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Parent = CoreGui
-    ScreenGui.Name = "ExperiencePassword"
-
-    local Frame = Instance.new("Frame")
-    Frame.Size = UDim2.new(0, 300, 0, 150)
-    Frame.Position = UDim2.new(0.5, -150, 0.5, -75)
-    Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
-    Frame.Parent = ScreenGui
-
-    local Box = Instance.new("TextBox")
-    Box.Size = UDim2.new(0.8, 0, 0.3, 0)
-    Box.Position = UDim2.new(0.1,0,0.3,0)
-    Box.Text = ""
-    Box.PlaceholderText = "Enter Password"
-    Box.Parent = Frame
-
-    local Button = Instance.new("TextButton")
-    Button.Size = UDim2.new(0.6,0,0.2,0)
-    Button.Position = UDim2.new(0.2,0,0.7,0)
-    Button.Text = "Unlock"
-    Button.Parent = Frame
-
-    local unlocked = Instance.new("BoolValue")
-    unlocked.Name = "Unlocked"
-    unlocked.Parent = ScreenGui
-
-    Button.MouseButton1Click:Connect(function()
-        if Box.Text == PASSWORD then
-            unlocked.Value = true
-            ScreenGui:Destroy()
-        else
-            Box.Text = ""
-            Box.PlaceholderText = "Wrong Password!"
-        end
-    end)
-
-    unlocked.Changed:Wait()
-end
-
-requestPassword()
-
--- Auto-run supported games script
-pcall(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
-end)
-
---// Rayfield UI
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
+-- Main Window
 local Window = Rayfield:CreateWindow({
     Name = "ExperienceGui",
     LoadingTitle = "ExperienceGui",
-    LoadingSubtitle = "By CoolDown",
+    LoadingSubtitle = "Made by CoolDown",
     ConfigurationSaving = {
         Enabled = true,
         FolderName = "ExperienceGui",
@@ -74,76 +22,96 @@ local Window = Rayfield:CreateWindow({
     Discord = {
         Enabled = false
     },
-    KeySystem = false
+    KeySystem = true,
+    KeySettings = {
+        Title = "ExperienceGui Access",
+        Subtitle = "Enter Password",
+        Note = "Password required to continue",
+        FileName = "ExperienceKey",
+        SaveKey = false,
+        GrabKeyFromSite = false,
+        Key = {"CoolDownExperience"} -- ✅ static password
+    }
 })
 
---// Tabs
-local homeTab = Window:CreateTab("Home", 4483362458)
-local clientTab = Window:CreateTab("Client Info", 4483362458)
-local execTab = Window:CreateTab("Executor Info", 4483362458)
-local userTab = Window:CreateTab("User Info", 4483362458)
-local basicTab = Window:CreateTab("Basic Needs", 4483362458)
-local libTab = Window:CreateTab("Script Library", 4483362458)
+-- Tabs
+local HomeTab = Window:CreateTab("Home", 4483362458)
+local NeedsTab = Window:CreateTab("Basic Needs", 4483362458)
+local ScriptsTab = Window:CreateTab("Script Library", 4483362458)
 
---// Home
-homeTab:CreateParagraph({Title="Welcome", Content="Hello "..LocalPlayer.Name..", welcome to ExperienceGui!"})
+-- Home / Info
+HomeTab:CreateLabel("Welcome to ExperienceGui")
+HomeTab:CreateLabel("Made by CoolDown")
+HomeTab:CreateLabel("Client: " .. LocalPlayer.Name)
 
---// Client Info
-clientTab:CreateLabel("Game: "..game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name)
-clientTab:CreateLabel("Place ID: "..game.PlaceId)
-
---// Executor Info
-execTab:CreateParagraph({Title="Executor", Content="Shows details if supported.\nEnvironment: "..(identifyexecutor and identifyexecutor() or "Unknown")})
-
---// User Info
-userTab:CreateLabel("Username: "..LocalPlayer.Name)
-userTab:CreateLabel("UserId: "..LocalPlayer.UserId)
-
---// Basic Needs
-basicTab:CreateSlider({
+-- Basic Needs
+NeedsTab:CreateSlider({
     Name = "WalkSpeed",
     Range = {16, 200},
     Increment = 1,
-    Suffix = " Speed",
+    Suffix = " speed",
     CurrentValue = 16,
+    Flag = "WalkSpeed",
     Callback = function(Value)
-        LocalPlayer.Character:WaitForChild("Humanoid").WalkSpeed = Value
+        LocalPlayer.Character.Humanoid.WalkSpeed = Value
     end,
 })
 
-basicTab:CreateSlider({
+NeedsTab:CreateSlider({
     Name = "JumpPower",
-    Range = {50, 200},
-    Increment = 1,
-    Suffix = " Power",
+    Range = {50, 300},
+    Increment = 5,
+    Suffix = " power",
     CurrentValue = 50,
+    Flag = "JumpPower",
     Callback = function(Value)
-        LocalPlayer.Character:WaitForChild("Humanoid").JumpPower = Value
+        LocalPlayer.Character.Humanoid.JumpPower = Value
     end,
 })
 
-basicTab:CreateButton({
-    Name = "Enable Fly GUI",
+NeedsTab:CreateButton({
+    Name = "Enable Fly",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
     end,
 })
 
---// Script Library (auto-updating from Scripts.txt)
-local success, result = pcall(function()
-    return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.txt")
+-- Autorun script (after password unlock)
+task.defer(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
 end)
 
-if success then
-    local scripts = HttpService:JSONDecode(result)
-    for _, scriptData in ipairs(scripts) do
-        libTab:CreateButton({
-            Name = scriptData.name,
-            Callback = function()
-                loadstring(game:HttpGet(scriptData.url, true))()
-            end,
-        })
+-- Script Library
+local function LoadScripts()
+    local success, result = pcall(function()
+        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.txt")
+    end)
+    if not success then
+        ScriptsTab:CreateLabel("⚠️ Failed to load Scripts.txt")
+        return
     end
-else
-    libTab:CreateLabel("⚠️ Failed to load Scripts.txt")
+
+    local scripts = {}
+    pcall(function()
+        scripts = HttpService:JSONDecode(result)
+    end)
+
+    if type(scripts) == "table" then
+        for _, scriptData in ipairs(scripts) do
+            ScriptsTab:CreateButton({
+                Name = scriptData.Name or "Unnamed Script",
+                Callback = function()
+                    if scriptData.URL then
+                        loadstring(game:HttpGet(scriptData.URL))()
+                    elseif scriptData.Code then
+                        loadstring(scriptData.Code)()
+                    end
+                end
+            })
+        end
+    else
+        ScriptsTab:CreateLabel("⚠️ Invalid script format")
+    end
 end
+
+LoadScripts()
