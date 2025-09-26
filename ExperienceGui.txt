@@ -3,11 +3,11 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Create main window with key system (password gating)
 local Window = Rayfield:CreateWindow({
-    Name = "CoolDown's Experience",
+    Name = "ExperienceGui",
     Icon = 0,
     LoadingTitle = "Loading...",
     LoadingSubtitle = "Please wait",
-    ShowText = "CoolDown",
+    ShowText = "ExperienceGui",
     ToggleUIKeybind = "K",
     Theme = "Default",
     KeySystem = true,
@@ -30,7 +30,7 @@ local humanoid = character:WaitForChild("Humanoid")
 local homeTab = Window:CreateTab("Home", 0)
 homeTab:CreateParagraph({
     Title = "Welcome",
-    Content = "Welcome to the CoolDown Experience GUI!\nScript by CoolDown"
+    Content = "Welcome to the Experience GUI!\nScript by CoolDown :D"
 })
 
 -- Client Info Tab (player name, display name, user ID)
