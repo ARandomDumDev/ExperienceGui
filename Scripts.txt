@@ -1,1 +1,14 @@
-eh not yet here yet
+[
+  {
+    "name": "Infinite Yield",
+    "url": "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
+  },
+  {
+    "name": "Fly GUI",
+    "url": "https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"
+  },
+  {
+    "name": "Dark Dex",
+    "url": "https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"
+  }
+]
