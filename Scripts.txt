@@ -8,7 +8,7 @@
     "url": "https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"
   },
   {
-    "name": "Dark Dex",
-    "url": "https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"
+    "name": "Roblox Quiz",
+    "url": "https://rawscripts.net/raw/Universal-Script-Quiz-by-AGBest-54336"
   }
 ]
