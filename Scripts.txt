@@ -10,5 +10,8 @@
   {
     "name": "Roblox Quiz",
     "url": "https://rawscripts.net/raw/Universal-Script-Quiz-by-AGBest-54336"
-  }
+  },
+  {
+"name": "Rejoin",
+"url": "yapyapyap"
 ]
