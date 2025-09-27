@@ -1,150 +1,137 @@
---// ExperienceGui Loader
---// Made by CoolDown
---// Password = CoolDownExperience
---// Changes = Fixed Script Library :D
+local function StartExperienceGui()
+    local HttpService = game:GetService("HttpService")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
 
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+    -- Load Rayfield
+    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
--- Load Rayfield
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+    -- Main Window
+    local Window = Rayfield:CreateWindow({
+        Name = "ExperienceGui",
+        LoadingTitle = "ExperienceGui",
+        LoadingSubtitle = "Made by CoolDown",
+        ConfigurationSaving = { Enabled = true, FolderName = "ExperienceGui", FileName = "Config" },
+        Discord = { Enabled = false },
+        KeySystem = true,
+        KeySettings = {
+            Title = "ExperienceGui Access",
+            Subtitle = "Enter Password",
+            Note = "Password required to continue",
+            FileName = "ExperienceKey",
+            SaveKey = false,
+            GrabKeyFromSite = false,
+            Key = {"CoolDownExperience"}
+        }
+    })
 
--- Main Window
-local Window = Rayfield:CreateWindow({
-    Name = "ExperienceGui",
-    LoadingTitle = "ExperienceGui",
-    LoadingSubtitle = "Made by CoolDown",
-    ConfigurationSaving = { Enabled = true, FolderName = "ExperienceGui", FileName = "Config" },
-    Discord = { Enabled = false },
-    KeySystem = true,
-    KeySettings = {
-        Title = "ExperienceGui Access",
-        Subtitle = "Enter Password",
-        Note = "Password required to continue",
-        FileName = "ExperienceKey",
-        SaveKey = false,
-        GrabKeyFromSite = false,
-        Key = {"CoolDownExperience"}
-    }
-})
+    -- Tabs
+    local HomeTab = Window:CreateTab("Home", 4483362458)
+    local NeedsTab = Window:CreateTab("Basic Needs", 4483362458)
+    local ScriptsTab = Window:CreateTab("Script Library", 4483362458)
 
--- Tabs
-local HomeTab = Window:CreateTab("Home", 4483362458)
-local NeedsTab = Window:CreateTab("Basic Needs", 4483362458)
-local ScriptsTab = Window:CreateTab("Script Library", 4483362458)
+    -- Home / Info
+    HomeTab:CreateLabel("Welcome to ExperienceGui")
+    HomeTab:CreateLabel("Made by CoolDown")
+    HomeTab:CreateLabel("Client: " .. LocalPlayer.Name)
+    HomeTab:CreateLabel("Version 2.02")
+    HomeTab:CreateLabel("Changelog: Fixed sum bugs and stuff\nadded this changelog\nadded version number")
 
--- Home / Info
-HomeTab:CreateLabel("Welcome to ExperienceGui")
-HomeTab:CreateLabel("Made by CoolDown")
-HomeTab:CreateLabel("Client: " .. LocalPlayer.Name)
-HomeTab:CreateLabel("Version 2.02")
-HomeTab:CreateLabel("Changelog: Fixed sum bugs and stuff\nadded this changelog\nadded version number"
-)
+    -- Needs tab
+    NeedsTab:CreateSlider({
+        Name = "WalkSpeed",
+        Range = {16, 200},
+        Increment = 1,
+        Suffix = " speed",
+        CurrentValue = 16,
+        Flag = "WalkSpeed",
+        Callback = function(Value)
+            LocalPlayer.Character.Humanoid.WalkSpeed = Value
+        end,
+    })
 
--- Basic Needs
-NeedsTab:CreateSlider({
-    Name = "WalkSpeed",
-    Range = {16, 200},
-    Increment = 1,
-    Suffix = " speed",
-    CurrentValue = 16,
-    Flag = "WalkSpeed",
-    Callback = function(Value)
-        LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end,
-})
+    NeedsTab:CreateSlider({
+        Name = "JumpPower",
+        Range = {50, 300},
+        Increment = 5,
+        Suffix = " power",
+        CurrentValue = 50,
+        Flag = "JumpPower",
+        Callback = function(Value)
+            LocalPlayer.Character.Humanoid.JumpPower = Value
+        end,
+    })
 
-NeedsTab:CreateSlider({
-    Name = "JumpPower",
-    Range = {50, 300},
-    Increment = 5,
-    Suffix = " power",
-    CurrentValue = 50,
-    Flag = "JumpPower",
-    Callback = function(Value)
-        LocalPlayer.Character.Humanoid.JumpPower = Value
-    end,
-})
+    NeedsTab:CreateButton({
+        Name = "Enable Fly",
+        Callback = function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+        end,
+    })
 
-NeedsTab:CreateButton({
-    Name = "Enable Fly",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
-    end,
-})
-
--- Autorun script
-task.defer(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
-end)
-
--- Script Library Loader
-local function LoadScriptLibrary()
-    -- Attempt to fetch the JSON
-    local success, result = pcall(function()
-        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.txt", true)
+    -- Autorun
+    task.defer(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
     end)
 
-    if not success then
-        ScriptsTab:CreateLabel("⚠️ Failed to fetch Scripts.txt")
-        warn("HTTP GET failed:", result)
-        return
-    end
+    -- Script Library
+    local function LoadScriptLibrary()
+        local success, result = pcall(function()
+            return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.txt", true)
+        end)
 
-    -- Decode JSON
-    local scripts
-    local decodeSuccess, decodeResult = pcall(function()
-        return HttpService:JSONDecode(result)
-    end)
+        if not success then
+            ScriptsTab:CreateLabel("⚠️ Failed to fetch Scripts.txt")
+            warn("HTTP GET failed:", result)
+            return
+        end
 
-    if not decodeSuccess then
-        ScriptsTab:CreateLabel("⚠️ Failed to decode Scripts.txt")
-        warn("JSON Decode failed:", decodeResult)
-        return
-    end
+        local scripts
+        local decodeSuccess, decodeResult = pcall(function()
+            return HttpService:JSONDecode(result)
+        end)
 
-    scripts = decodeResult
+        if not decodeSuccess then
+            ScriptsTab:CreateLabel("⚠️ Failed to decode Scripts.txt")
+            warn("JSON Decode failed:", decodeResult)
+            return
+        end
 
-    -- Check if scripts exist
-    if type(scripts) ~= "table" or #scripts == 0 then
-        ScriptsTab:CreateLabel("⚠️ No scripts found")
-        return
-    end
+        scripts = decodeResult
+        if type(scripts) ~= "table" or #scripts == 0 then
+            ScriptsTab:CreateLabel("⚠️ No scripts found")
+            return
+        end
 
-    -- Create a button for each script
-    for _, scriptData in ipairs(scripts) do
-        ScriptsTab:CreateButton({
-            Name = scriptData.name or "Unnamed Script",
-            Callback = function()
-                if scriptData.url then
-                    local ok, err = pcall(function()
-                        loadstring(game:HttpGet(scriptData.url, true))()
-                    end)
-                    if not ok then
-                        warn("Failed to load script:", scriptData.name, err)
+        for _, scriptData in ipairs(scripts) do
+            ScriptsTab:CreateButton({
+                Name = scriptData.name or "Unnamed Script",
+                Callback = function()
+                    if scriptData.url then
+                        local ok, err = pcall(function()
+                            loadstring(game:HttpGet(scriptData.url, true))()
+                        end)
+                        if not ok then warn("Failed to load script:", scriptData.name, err) end
+                    elseif scriptData.code then
+                        local ok, err = pcall(function()
+                            loadstring(scriptData.code)()
+                        end)
+                        if not ok then warn("Failed to execute script:", scriptData.name, err) end
+                    else
+                        warn("No url or code found for script:", scriptData.name)
                     end
-                elseif scriptData.code then
-                    local ok, err = pcall(function()
-                        loadstring(scriptData.code)()
-                    end)
-                    if not ok then
-                        warn("Failed to execute script:", scriptData.name, err)
-                    end
-                else
-                    warn("No url or code found for script:", scriptData.name)
                 end
-            end
-        })
+            })
+        end
     end
+
+    task.defer(function()
+        task.wait(1)
+        pcall(LoadScriptLibrary)
+    end)
+
+    -- return Rayfield window so loader can close it later
+    return Window
 end
 
--- Load the script library once
-task.defer(function()
-    task.wait(1)
-    local ok, err = pcall(LoadScriptLibrary)
-    if not ok then
-        ScriptsTab:CreateLabel("⚠️ Failed to load Scripts")
-        warn("Script Library load failed:", err)
-    end
-end)
+return StartExperienceGui
