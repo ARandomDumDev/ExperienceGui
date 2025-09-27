@@ -77,65 +77,74 @@ task.defer(function()
 end)
 
 -- Script Library Loader
-local function LoadScripts()
-    ScriptsTab:Clear() -- remove old buttons/labels before reloading
+local function LoadScriptLibrary()
+    -- Add a loading message
+    ScriptsTab:CreateLabel("⏳ Loading Scripts...")
 
+    -- Attempt to fetch the JSON
     local success, result = pcall(function()
-        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/Scripts.txt", true)
+        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.txt", true)
     end)
 
     if not success then
-        ScriptsTab:CreateLabel("⚠️ Failed to load Scripts.txt")
+        ScriptsTab:CreateLabel("⚠️ Failed to fetch Scripts.txt")
         warn("HTTP GET failed:", result)
         return
     end
 
+    -- Attempt to decode JSON
     local scripts
     local decodeSuccess, decodeResult = pcall(function()
         return HttpService:JSONDecode(result)
     end)
 
-    if decodeSuccess then
-        scripts = decodeResult
-    else
+    if not decodeSuccess then
         ScriptsTab:CreateLabel("⚠️ Failed to decode Scripts.txt")
         warn("JSON Decode failed:", decodeResult)
         return
     end
 
-    if type(scripts) == "table" then
-        for _, scriptData in ipairs(scripts) do
-            ScriptsTab:CreateButton({
-                Name = scriptData.name or "Unnamed Script",
-                Callback = function()
-                    if scriptData.url then
-                        local ok, err = pcall(function()
-                            loadstring(game:HttpGet(scriptData.url, true))()
-                        end)
-                        if not ok then
-                            warn("Failed to load script:", scriptData.name, err)
-                        end
-                    elseif scriptData.code then
-                        local ok, err = pcall(function()
-                            loadstring(scriptData.code)()
-                        end)
-                        if not ok then
-                            warn("Failed to execute script:", scriptData.name, err)
-                        end
+    scripts = decodeResult
+
+    -- Check if scripts exist
+    if type(scripts) ~= "table" or #scripts == 0 then
+        ScriptsTab:CreateLabel("⚠️ No scripts found")
+        return
+    end
+
+    -- Create a button for each script
+    for _, scriptData in ipairs(scripts) do
+        ScriptsTab:CreateButton({
+            Name = scriptData.name or "Unnamed Script",
+            Callback = function()
+                if scriptData.url then
+                    local ok, err = pcall(function()
+                        loadstring(game:HttpGet(scriptData.url, true))()
+                    end)
+                    if not ok then
+                        warn("Failed to load script:", scriptData.name, err)
                     end
+                elseif scriptData.code then
+                    local ok, err = pcall(function()
+                        loadstring(scriptData.code)()
+                    end)
+                    if not ok then
+                        warn("Failed to execute script:", scriptData.name, err)
+                    end
+                else
+                    warn("No url or code found for script:", scriptData.name)
                 end
-            })
-        end
-    else
-        ScriptsTab:CreateLabel("⚠️ Invalid script format")
+            end
+        })
     end
 end
 
 -- Initial load
 task.defer(function()
-    task.wait(1) -- small delay to ensure tabs exist
-    local ok, err = pcall(LoadScripts)
+    task.wait(1)
+    local ok, err = pcall(LoadScriptLibrary)
     if not ok then
-        warn("Initial Script Library load failed:", err)
+        ScriptsTab:CreateLabel("⚠️ Failed to load Scripts")
+        warn("Script Library load failed:", err)
     end
 end)
