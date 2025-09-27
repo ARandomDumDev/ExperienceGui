@@ -20,6 +20,10 @@
     "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/zerogravity.txt"
   },
   {
+    "name": "Fling Things And People",
+    "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/rejoin.txt"
+  },
+  {
     "name": "Rejoin",
     "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/rejoin.txt"
   }
