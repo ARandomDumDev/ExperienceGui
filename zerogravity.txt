@@ -1,1 +1,134 @@
+-- No Gravity + Random Rotate GUI (mobile-friendly & persistent)
+local player = game.Players.LocalPlayer
 
+-- Function to create GUI
+local function createNoGravityGUI()
+	if player.PlayerGui:FindFirstChild("NoGravityGUI") then return end
+
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "NoGravityGUI"
+	screenGui.ResetOnSpawn = false
+	screenGui.Parent = player.PlayerGui
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0,160,0,80)
+	frame.Position = UDim2.new(0.5,-80,0.85,-40)
+	frame.AnchorPoint = Vector2.new(0.5,0.5)
+	frame.BackgroundTransparency = 0.4
+	frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	frame.BorderSizePixel = 0
+	frame.Parent = screenGui
+
+	-- Dragging
+	local dragging = false
+	local dragInput, mousePos, framePos
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			mousePos = input.Position
+			framePos = frame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
+	local UIS = game:GetService("UserInputService")
+	UIS.InputChanged:Connect(function(input)
+		if dragging and input == dragInput then
+			local delta = input.Position - mousePos
+			frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+		end
+	end)
+
+	-- Toggle button
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(0,140,0,50)
+	button.Position = UDim2.new(0.5,0,0,15)
+	button.AnchorPoint = Vector2.new(0.5,0)
+	button.Text = "No Gravity: OFF"
+	button.TextScaled = true
+	button.BackgroundColor3 = Color3.fromRGB(100,200,255)
+	button.BorderSizePixel = 0
+	button.Parent = frame
+
+	local gravityEnabled = false
+	local spinConnection
+
+	local function enableNoGravity(char)
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		local humanoid = char:FindFirstChild("Humanoid")
+		if not hrp or not humanoid then return end
+
+		local bodyForce = Instance.new("BodyForce")
+		bodyForce.Force = Vector3.new(0,workspace.Gravity*hrp:GetMass(),0)
+		bodyForce.Name = "NoGravityForce"
+		bodyForce.Parent = hrp
+
+		-- Random rotation
+		spinConnection = game:GetService("RunService").RenderStepped:Connect(function()
+			hrp.CFrame = hrp.CFrame * CFrame.Angles(
+				math.rad(math.random(-5,5)),
+				math.rad(math.random(-5,5)),
+				math.rad(math.random(-5,5))
+			)
+		end)
+	end
+
+	local function disableNoGravity(char)
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			local bf = hrp:FindFirstChild("NoGravityForce")
+			if bf then bf:Destroy() end
+		end
+		if spinConnection then spinConnection:Disconnect() end
+	end
+
+	button.MouseButton1Click:Connect(function()
+		gravityEnabled = not gravityEnabled
+		button.Text = "No Gravity: "..(gravityEnabled and "ON" or "OFF")
+		local char = player.Character
+		if char then
+			if gravityEnabled then
+				enableNoGravity(char)
+			else
+				disableNoGravity(char)
+			end
+		end
+	end)
+end
+
+-- Initial GUI creation
+createNoGravityGUI()
+
+-- Recreate GUI & re-enable no gravity after respawn
+player.CharacterAdded:Connect(function(char)
+	task.wait(1)
+	createNoGravityGUI()
+	if player.PlayerGui:FindFirstChild("NoGravityGUI") then
+		local button = player.PlayerGui.NoGravityGUI:FindFirstChildOfClass("Frame"):FindFirstChildOfClass("TextButton")
+		if button and button.Text == "No Gravity: ON" then
+			-- auto re-enable
+			local hrp = char:WaitForChild("HumanoidRootPart")
+			local bf = Instance.new("BodyForce")
+			bf.Force = Vector3.new(0,workspace.Gravity*hrp:GetMass(),0)
+			bf.Name = "NoGravityForce"
+			bf.Parent = hrp
+
+			local spinConnection
+			spinConnection = game:GetService("RunService").RenderStepped:Connect(function()
+				hrp.CFrame = hrp.CFrame * CFrame.Angles(
+					math.rad(math.random(-5,5)),
+					math.rad(math.random(-5,5)),
+					math.rad(math.random(-5,5))
+				)
+			end)
+		end
+	end
+end)
