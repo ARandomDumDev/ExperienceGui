@@ -82,10 +82,11 @@ task.defer(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
 end)
 
--- Script Library
+-- Script Library Auto-Refresh
 local function LoadScripts()
+    ScriptsTab:Clear() -- remove old buttons/labels before reloading
+
     local success, result = pcall(function()
-        -- Use proper raw GitHub URL
         return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/Scripts.txt")
     end)
 
@@ -109,7 +110,7 @@ local function LoadScripts()
     if type(scripts) == "table" then
         for _, scriptData in ipairs(scripts) do
             ScriptsTab:CreateButton({
-                Name = scriptData.name or "Unnamed Script",  -- match JSON lowercase
+                Name = scriptData.name or "Unnamed Script",
                 Callback = function()
                     if scriptData.url then
                         loadstring(game:HttpGet(scriptData.url))()
@@ -124,4 +125,11 @@ local function LoadScripts()
     end
 end
 
-LoadScripts()
+-- Auto-refresh every 10 seconds
+task.spawn(function()
+    while true do
+        LoadScripts()
+        task.wait(10) -- refresh interval (seconds)
+    end
+end)
+
