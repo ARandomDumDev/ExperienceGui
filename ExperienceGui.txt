@@ -99,7 +99,7 @@ local function LoadScripts()
     if type(scripts) == "table" then
         for _, scriptData in ipairs(scripts) do
             ScriptsTab:CreateButton({
-                Name = scriptData.Name or "Unnamed Script",
+                name = scriptData.Name or "Unnamed Script",
                 Callback = function()
                     if scriptData.URL then
                         loadstring(game:HttpGet(scriptData.URL))()
