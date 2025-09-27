@@ -21,7 +21,7 @@
   },
   {
     "name": "Fling Things And People",
-    "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/rejoin.txt"
+    "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/FTAP.txt"
   },
   {
     "name": "Rejoin",
