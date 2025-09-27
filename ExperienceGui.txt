@@ -129,7 +129,7 @@ end
 task.spawn(function()
     task.wait(1) -- wait 1 second to ensure tabs are ready
     while true do
-        local ok, err = pcall(SafeLoadScripts)
+        local ok, err = pcall(LoadScripts)
         if not ok then
             warn("Script Library refresh error: ", err)
         end
