@@ -7,7 +7,7 @@ local HttpService = game:GetService("HttpService")
 
 -- Remote URLs
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
-local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGui.txt"
+local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
 
 -- Fetch config.json
 local ok, data = pcall(function()
