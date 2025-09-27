@@ -1,67 +1,50 @@
-
---// ExperienceGui Loader
---// Centralized control for everyone
---// Change only this script's URL in announcements, not the main GUI
-
-local HttpService = game:GetService("HttpService")
-
--- Remote URLs
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
 local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
 
--- Fetch config.json
-local ok, data = pcall(function()
-    return game:HttpGet(configUrl, true)
-end)
+local HttpService = game:GetService("HttpService")
 
-local config
-if ok and data then
-    local success, result = pcall(function()
-        return HttpService:JSONDecode(data)
-    end)
-    if success then
-        config = result
+local currentGui
+local currentVersion
+
+local function loadGui()
+    local source = game:HttpGet(scriptUrl)
+    local fn = loadstring(source)
+    currentGui = fn()  -- returns Window
+end
+
+local function unloadGui()
+    if currentGui and currentGui.Destroy then
+        currentGui:Destroy()  -- Rayfield windows can be destroyed
     end
+    currentGui = nil
 end
 
--- Fallback if config.json is empty/broken
-if not config then
-    config = {
-        version = "unknown",
-        maintenance = false,
-        message = "Config unavailable."
-    }
-end
+-- Initial load
+loadGui()
 
--- Load Rayfield
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-
--- Maintenance mode
-if config.maintenance then
-    local Window = Rayfield:CreateWindow({
-        Name = "ExperienceGui",
-        LoadingTitle = "ExperienceGui",
-        LoadingSubtitle = "Made by CoolDown",
-        ConfigurationSaving = { Enabled = false },
-        Discord = { Enabled = false },
-        KeySystem = false
-    })
-
-    local Tab = Window:CreateTab("Maintenance", 4483362458)
-    Tab:CreateLabel("🚧 ExperienceGui Under Maintenance 🚧")
-    Tab:CreateLabel(config.message or "Please try again later.")
-    Tab:CreateLabel("Version: " .. tostring(config.version))
-
-    return -- stop here, don’t load the real GUI
-end
-
--- Normal load
-warn("[ExperienceGui Loader] Version: " .. tostring(config.version))
-
-local guiSource = game:HttpGet(scriptUrl, true)
-local fn, err = loadstring(guiSource)
-if fn then
-    fn()
-else
-    warn("Failed to load ExperienceGui:", err)
-end
+-- Poll config.json
+task.spawn(function()
+    while task.wait(10) do
+        local ok, result = pcall(function()
+            return game:HttpGet(configUrl)
+        end)
+        if ok then
+            local cfg = HttpService:JSONDecode(result)
+            if cfg.maintenance then
+                unloadGui()
+                -- Show maintenance message
+                local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+                local win = Rayfield:CreateWindow({
+                    Name = "ExperienceGui - Maintenance",
+                    LoadingTitle = "Maintenance",
+                    LoadingSubtitle = "Please wait...",
+                })
+                win:CreateTab("Notice", 4483362458):CreateLabel(cfg.message or "Down for maintenance.")
+            elseif cfg.version and cfg.version ~= currentVersion then
+                unloadGui()
+                loadGui()
+                currentVersion = cfg.version
+            end
+        end
+    end
+end)
