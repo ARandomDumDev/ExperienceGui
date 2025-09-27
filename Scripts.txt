@@ -5,7 +5,7 @@
   },
   {
     "name": "ExperienceParts",
-    "url": "https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"
+    "url": "https://raw.githubusercontent.com/hellohellohell012321/KAWAII-AURA/main/kawaii_aura.lua"
   },
   {
     "name": "Roblox Quiz",
