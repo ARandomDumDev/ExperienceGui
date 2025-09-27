@@ -16,11 +16,11 @@
     "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/flingyourself.txt"
   },
   {
-    "name": "Rejoin",
-    "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/rejoin.txt"
-  },
-  {
     "name": "Experience No Gravity",
     "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/zerogravity.txt"
+  },
+  {
+    "name": "Rejoin",
+    "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/rejoin.txt"
   }
 ]
