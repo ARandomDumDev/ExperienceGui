@@ -78,9 +78,6 @@ end)
 
 -- Script Library Loader
 local function LoadScriptLibrary()
-    -- Add a loading message
-    ScriptsTab:CreateLabel("⏳ Loading Scripts...")
-
     -- Attempt to fetch the JSON
     local success, result = pcall(function()
         return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.txt", true)
@@ -92,7 +89,7 @@ local function LoadScriptLibrary()
         return
     end
 
-    -- Attempt to decode JSON
+    -- Decode JSON
     local scripts
     local decodeSuccess, decodeResult = pcall(function()
         return HttpService:JSONDecode(result)
@@ -139,7 +136,7 @@ local function LoadScriptLibrary()
     end
 end
 
--- Initial load
+-- Load the script library once
 task.defer(function()
     task.wait(1)
     local ok, err = pcall(LoadScriptLibrary)
