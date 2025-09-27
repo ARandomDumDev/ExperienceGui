@@ -37,7 +37,7 @@ local function StartExperienceGui()
     HomeTab:CreateLabel("Welcome to ExperienceGui")
     HomeTab:CreateLabel("Made by CoolDown")
     HomeTab:CreateLabel("Client: " .. LocalPlayer.Name)
-    HomeTab:CreateLabel("Version 2.04")
+    HomeTab:CreateLabel("Version 2.05")
 
     -- Needs tab
     NeedsTab:CreateSlider({
