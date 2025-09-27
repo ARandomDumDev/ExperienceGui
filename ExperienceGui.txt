@@ -1,7 +1,7 @@
 --// ExperienceGui Loader
 --// Made by CoolDown
 --// Password = CoolDownExperience
---// Changes = script library fixed
+--// Changes = Script Library safe load + auto-refresh
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -15,14 +15,8 @@ local Window = Rayfield:CreateWindow({
     Name = "ExperienceGui",
     LoadingTitle = "ExperienceGui",
     LoadingSubtitle = "Made by CoolDown",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "ExperienceGui",
-        FileName = "Config"
-    },
-    Discord = {
-        Enabled = false
-    },
+    ConfigurationSaving = { Enabled = true, FolderName = "ExperienceGui", FileName = "Config" },
+    Discord = { Enabled = false },
     KeySystem = true,
     KeySettings = {
         Title = "ExperienceGui Access",
@@ -31,7 +25,7 @@ local Window = Rayfield:CreateWindow({
         FileName = "ExperienceKey",
         SaveKey = false,
         GrabKeyFromSite = false,
-        Key = {"CoolDownExperience"} -- ✅ static password
+        Key = {"CoolDownExperience"}
     }
 })
 
@@ -77,25 +71,26 @@ NeedsTab:CreateButton({
     end,
 })
 
--- Autorun script (after password unlock)
+-- Autorun script
 task.defer(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
 end)
 
--- Script Library Auto-Refresh
+-- Script Library Loader
 local function LoadScripts()
     ScriptsTab:Clear() -- remove old buttons/labels before reloading
 
     local success, result = pcall(function()
-        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/Scripts.txt")
+        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/Scripts.txt", true)
     end)
 
     if not success then
         ScriptsTab:CreateLabel("⚠️ Failed to load Scripts.txt")
+        warn("HTTP GET failed:", result)
         return
     end
 
-    local scripts = {}
+    local scripts
     local decodeSuccess, decodeResult = pcall(function()
         return HttpService:JSONDecode(result)
     end)
@@ -104,6 +99,7 @@ local function LoadScripts()
         scripts = decodeResult
     else
         ScriptsTab:CreateLabel("⚠️ Failed to decode Scripts.txt")
+        warn("JSON Decode failed:", decodeResult)
         return
     end
 
@@ -113,9 +109,19 @@ local function LoadScripts()
                 Name = scriptData.name or "Unnamed Script",
                 Callback = function()
                     if scriptData.url then
-                        loadstring(game:HttpGet(scriptData.url))()
+                        local ok, err = pcall(function()
+                            loadstring(game:HttpGet(scriptData.url, true))()
+                        end)
+                        if not ok then
+                            warn("Failed to load script:", scriptData.name, err)
+                        end
                     elseif scriptData.code then
-                        loadstring(scriptData.code)()
+                        local ok, err = pcall(function()
+                            loadstring(scriptData.code)()
+                        end)
+                        if not ok then
+                            warn("Failed to execute script:", scriptData.name, err)
+                        end
                     end
                 end
             })
@@ -125,15 +131,23 @@ local function LoadScripts()
     end
 end
 
--- Auto-refresh every 10 seconds (with initial delay)
+-- Initial Load (deferred to ensure tabs exist)
+task.defer(function()
+    task.wait(2)
+    local ok, err = pcall(LoadScripts)
+    if not ok then
+        warn("Initial Script Library load failed:", err)
+    end
+end)
+
+-- Auto-refresh every 10 seconds
 task.spawn(function()
-    task.wait(1) -- wait 1 second to ensure tabs are ready
+    task.wait(5) -- slight delay before first auto-refresh
     while true do
         local ok, err = pcall(LoadScripts)
         if not ok then
-            warn("Script Library refresh error: ", err)
+            warn("Script Library refresh error:", err)
         end
         task.wait(10)
     end
 end)
-
