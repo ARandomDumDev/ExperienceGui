@@ -39,7 +39,7 @@ HomeTab:CreateLabel("Welcome to ExperienceGui")
 HomeTab:CreateLabel("Made by CoolDown")
 HomeTab:CreateLabel("Client: " .. LocalPlayer.Name)
 HomeTab:CreateLabel("Version 2.02")
-HomeTab:CreateLabel("Fixed sum bugs and stuff and IM BERY BERY SIGMAAA")
+HomeTab:CreateLabel("Changelog: Fixed sum bugs and stuff and IM BERY BERY SIGMAAA")
 
 -- Basic Needs
 NeedsTab:CreateSlider({
