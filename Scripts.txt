@@ -13,5 +13,5 @@
   },
   {
 "name": "Rejoin",
-"url": "yapyapyap"
+"url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/rejoin.txt"
 ]
