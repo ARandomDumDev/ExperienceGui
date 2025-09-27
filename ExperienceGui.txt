@@ -1,7 +1,7 @@
 --// ExperienceGui Loader
 --// Made by CoolDown
 --// Password = CoolDownExperience
---// Changes = Script Library safe load + auto-refresh
+--// Changes = script library fixed, no auto-refresh
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -131,23 +131,11 @@ local function LoadScripts()
     end
 end
 
--- Initial Load (deferred to ensure tabs exist)
+-- Initial load
 task.defer(function()
-    task.wait(2)
+    task.wait(1) -- small delay to ensure tabs exist
     local ok, err = pcall(LoadScripts)
     if not ok then
         warn("Initial Script Library load failed:", err)
-    end
-end)
-
--- Auto-refresh every 10 seconds
-task.spawn(function()
-    task.wait(5) -- slight delay before first auto-refresh
-    while true do
-        local ok, err = pcall(LoadScripts)
-        if not ok then
-            warn("Script Library refresh error:", err)
-        end
-        task.wait(10)
     end
 end)
