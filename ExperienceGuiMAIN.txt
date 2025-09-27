@@ -130,16 +130,37 @@ local function StartExperienceGui()
         pcall(LoadScriptLibrary)
     end)
 
-    -- Announcements + Changelog
+    local function StartExperienceGui()
+    local HttpService = game:GetService("HttpService")
+    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+    local Window = Rayfield:CreateWindow({
+        Name = "ExperienceGui",
+        LoadingTitle = "ExperienceGui",
+        LoadingSubtitle = "Made by CoolDown",
+    })
+
+    local AnnTab = Window:CreateTab("News", 4483362458)
+
     local announcementsUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/announcementsChangelogs.json"
+    local announcementLabels = {}
+
+    local function ClearOldLabels()
+        for _, label in ipairs(announcementLabels) do
+            label:Set("Text", "") -- Rayfield workaround
+        end
+        announcementLabels = {}
+    end
 
     local function LoadAnnouncements()
+        ClearOldLabels()
+
         local success, result = pcall(function()
             return game:HttpGet(announcementsUrl, true)
         end)
 
         if not success then
-            AnnTab:CreateLabel("⚠️ Failed to fetch announcements")
+            table.insert(announcementLabels, AnnTab:CreateLabel("⚠️ Failed to fetch announcements"))
             warn("HTTP GET failed:", result)
             return
         end
@@ -150,7 +171,7 @@ local function StartExperienceGui()
         end)
 
         if not decodeSuccess then
-            AnnTab:CreateLabel("⚠️ Failed to decode announcements")
+            table.insert(announcementLabels, AnnTab:CreateLabel("⚠️ Failed to decode announcements"))
             warn("JSON Decode failed:", decodeResult)
             return
         end
@@ -158,21 +179,25 @@ local function StartExperienceGui()
         data = decodeResult
 
         if data.announcement then
-            AnnTab:CreateLabel("📢 " .. data.announcement)
+            table.insert(announcementLabels, AnnTab:CreateLabel("📢 " .. data.announcement))
         else
-            AnnTab:CreateLabel("📢 No announcement at this time")
+            table.insert(announcementLabels, AnnTab:CreateLabel("📢 No announcement at this time"))
         end
 
         if data.changelog then
-            AnnTab:CreateLabel("📝 " .. data.changelog)
+            table.insert(announcementLabels, AnnTab:CreateLabel("📝 " .. data.changelog))
         else
-            AnnTab:CreateLabel("📝 No changelog available")
+            table.insert(announcementLabels, AnnTab:CreateLabel("📝 No changelog available"))
         end
     end
 
-    task.defer(LoadAnnouncements)
-
-    return Window
+    task.defer(function()
+        while true do
+            LoadAnnouncements()
+            task.wait(60) -- refresh every 60s
+        end
+    end)
 end
 
-return StartExperienceGui()
+-- Call the function
+StartExperienceGui()
