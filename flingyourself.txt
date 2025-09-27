@@ -1,17 +1,29 @@
--- my little soda pop? more like my minature carbonated drink
+-- my minature carbonated water explosion
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hrp = char:WaitForChild("HumanoidRootPart")
 local humanoid = char:WaitForChild("Humanoid")
 
--- Trip & fling function
+-- Trip & fling with spin
 local function tripAndFling(force)
 	if humanoid.Health <= 0 then return end
 	humanoid.PlatformStand = true
 	force = force or 50
+
+	-- Linear fling
 	hrp.Velocity = Vector3.new(math.random(-force,force), math.random(25,force/1.5), math.random(-force,force))
+
+	-- Spin using AngularVelocity
+	local spin = Instance.new("BodyAngularVelocity")
+	spin.MaxTorque = Vector3.new(400000,400000,400000) -- allow full rotation
+	spin.AngularVelocity = Vector3.new(math.random(-10,10), math.random(-10,10), math.random(-10,10)) * (force/10)
+	spin.P = 3000
+	spin.Parent = hrp
+
+	-- Remove spin after short duration
 	task.delay(0.6, function()
 		humanoid.PlatformStand = false
+		spin:Destroy()
 	end)
 end
 
