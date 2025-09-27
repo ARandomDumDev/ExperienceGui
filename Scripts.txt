@@ -4,7 +4,7 @@
     "url": "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
   },
   {
-    "name": "Fly GUI",
+    "name": "ExperienceParts",
     "url": "https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"
   },
   {
