@@ -1,15 +1,15 @@
--- yapty yap
+-- my little soda pop? more like my minature carbonated drink
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hrp = char:WaitForChild("HumanoidRootPart")
 local humanoid = char:WaitForChild("Humanoid")
 
--- Function to trip & fling
+-- Trip & fling function
 local function tripAndFling(force)
 	if humanoid.Health <= 0 then return end
 	humanoid.PlatformStand = true
 	force = force or 50
-	hrp.Velocity = Vector3.new(math.random(-force,force), math.random(25, force/1.5), math.random(-force,force))
+	hrp.Velocity = Vector3.new(math.random(-force,force), math.random(25,force/1.5), math.random(-force,force))
 	task.delay(0.6, function()
 		humanoid.PlatformStand = false
 	end)
@@ -21,18 +21,15 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "TripFlingGUI"
 screenGui.Parent = playerGui
 
--- Container Frame
+-- Frame
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0,160,0,130)
 frame.Position = UDim2.new(0.5,-80,0.85,-65)
 frame.AnchorPoint = Vector2.new(0.5,0.5)
 frame.BackgroundTransparency = 0.4
 frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
-frame.ClipsDescendants = true
-frame.Parent = screenGui
-frame.AutoLocalize = false
 frame.BorderSizePixel = 0
-frame.Rounding = 12 -- modern rounded corners, requires Roblox 2024+ features
+frame.Parent = screenGui
 
 -- Button
 local button = Instance.new("TextButton")
@@ -44,13 +41,8 @@ button.TextScaled = true
 button.BackgroundColor3 = Color3.fromRGB(255,100,100)
 button.BorderSizePixel = 0
 button.Parent = frame
-button.Rounding = 8
 
--- Hover effect (mobile-friendly: press)
-button.MouseEnter:Connect(function() button.BackgroundColor3 = Color3.fromRGB(255,150,150) end)
-button.MouseLeave:Connect(function() button.BackgroundColor3 = Color3.fromRGB(255,100,100) end)
-
--- Fling Strength Slider
+-- Slider label
 local sliderLabel = Instance.new("TextLabel")
 sliderLabel.Size = UDim2.new(1, -20, 0, 30)
 sliderLabel.Position = UDim2.new(0,10,0,70)
@@ -60,26 +52,24 @@ sliderLabel.TextScaled = true
 sliderLabel.TextColor3 = Color3.fromRGB(255,255,255)
 sliderLabel.Parent = frame
 
-local UIS = game:GetService("UserInputService")
-local force = 50
-
--- Drag to change force
-local dragging = false
+-- Slider
 local sliderBar = Instance.new("Frame")
 sliderBar.Size = UDim2.new(1, -20, 0, 10)
 sliderBar.Position = UDim2.new(0,10,0,105)
 sliderBar.BackgroundColor3 = Color3.fromRGB(200,200,200)
 sliderBar.BorderSizePixel = 0
-sliderBar.Rounding = 5
 sliderBar.Parent = frame
 
 local sliderKnob = Instance.new("Frame")
 sliderKnob.Size = UDim2.new(0,20,1,0)
-sliderKnob.Position = UDim2.new(force/100,0,0,0)
+sliderKnob.Position = UDim2.new(0.5,0,0,0)
 sliderKnob.BackgroundColor3 = Color3.fromRGB(255,0,0)
 sliderKnob.BorderSizePixel = 0
-sliderKnob.Rounding = 10
 sliderKnob.Parent = sliderBar
+
+local UIS = game:GetService("UserInputService")
+local force = 50
+local dragging = false
 
 local function updateForce(x)
 	local relative = math.clamp((x - sliderBar.AbsolutePosition.X)/sliderBar.AbsoluteSize.X, 0, 1)
@@ -102,7 +92,6 @@ UIS.InputChanged:Connect(function(input)
 	end
 end)
 
--- Connect button
 button.MouseButton1Click:Connect(function()
 	tripAndFling(force)
 end)
