@@ -5,7 +5,7 @@
   },
   {
     "name": "ExperienceParts",
-    "url": "https://raw.githubusercontent.com/hellohellohell012321/KAWAII-AURA/main/kawaii_aura.lua"
+    "url": "https://raw.githubusercontent.com/hm5650/PartController/refs/heads/main/PartController.lua"
   },
   {
     "name": "Roblox Quiz",
