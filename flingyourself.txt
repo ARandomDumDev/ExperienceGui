@@ -1,61 +1,23 @@
--- cooldownexperiencefork
+-- yes
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+local humanoid = char:WaitForChild("Humanoid")
 
-local Players = game:GetService("Players")
-local Debris = game:GetService("Debris")
-local player = Players.LocalPlayer
-
--- Settings
-local flingForce = 2000 -- strength of the fling
-
--- Create GUI
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "ExperienceFlingYourselfGUI"
-screenGui.ResetOnSpawn = false
-screenGui.IgnoreGuiInset = true
-screenGui.Parent = player:WaitForChild("PlayerGui")
-
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 180, 0, 60)
-frame.Position = UDim2.new(0.5, -90, 0.1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.BackgroundTransparency = 0.15
-frame.BorderSizePixel = 0
-frame.Parent = screenGui
-
-local flingBtn = Instance.new("TextButton")
-flingBtn.Size = UDim2.new(1, -12, 1, -12)
-flingBtn.Position = UDim2.new(0, 6, 0, 6)
-flingBtn.Text = "Experience!"
-flingBtn.Font = Enum.Font.GothamBold
-flingBtn.TextSize = 22
-flingBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
-flingBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-flingBtn.BorderSizePixel = 0
-flingBtn.Parent = frame
-
--- Fling function
-local function flingSelf()
-    local char = player.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    -- Create BodyVelocity to fling
-    local bv = Instance.new("BodyVelocity")
-    bv.Velocity = Vector3.new(
-        math.random(-flingForce, flingForce),
-        flingForce,
-        math.random(-flingForce, flingForce)
-    )
-    bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-    bv.P = 1e5
-    bv.Parent = hrp
-
-    -- Auto-remove after 0.3 seconds
-    Debris:AddItem(bv, 0.3)
+local function tripAndFling()
+	if humanoid.Health <= 0 then return end
+	humanoid.PlatformStand = true
+	hrp.Velocity = Vector3.new(math.random(-50,50), 30, math.random(-50,50))
+	task.delay(0.6, function()
+		humanoid.PlatformStand = false
+	end)
 end
 
--- Button click
-flingBtn.MouseButton1Click:Connect(flingSelf)
-
--- Optional: auto-hide GUI if needed (e.g., for mobile screen space)
+-- Press T to trip & fling
+local UIS = game:GetService("UserInputService")
+UIS.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.T then
+		tripAndFling()
+	end
+end)
