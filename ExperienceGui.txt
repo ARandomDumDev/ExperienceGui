@@ -1,7 +1,7 @@
 --// ExperienceGui Loader
 --// Made by CoolDown
 --// Password = CoolDownExperience
---// Changes = beta :D scripty library is being fixed btw
+--// Changes = Fixed Script Library :D
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
