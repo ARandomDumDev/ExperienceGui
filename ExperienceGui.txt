@@ -38,6 +38,7 @@ local ScriptsTab = Window:CreateTab("Script Library", 4483362458)
 HomeTab:CreateLabel("Welcome to ExperienceGui")
 HomeTab:CreateLabel("Made by CoolDown")
 HomeTab:CreateLabel("Client: " .. LocalPlayer.Name)
+HomeTab:CreateLanel("Version 2.01")
 
 -- Basic Needs
 NeedsTab:CreateSlider({
