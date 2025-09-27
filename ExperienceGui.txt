@@ -125,11 +125,15 @@ local function LoadScripts()
     end
 end
 
--- Auto-refresh every 10 seconds
+-- Auto-refresh every 10 seconds (with initial delay)
 task.spawn(function()
+    task.wait(1) -- wait 1 second to ensure tabs are ready
     while true do
-        LoadScripts()
-        task.wait(10) -- refresh interval (seconds)
+        local ok, err = pcall(SafeLoadScripts)
+        if not ok then
+            warn("Script Library refresh error: ", err)
+        end
+        task.wait(10)
     end
 end)
 
