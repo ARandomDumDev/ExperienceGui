@@ -12,6 +12,10 @@
     "url": "https://rawscripts.net/raw/Universal-Script-Quiz-by-AGBest-54336"
   },
   {
+    "name": "FlingYourselfExperience",
+    "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/flingyourself.txt"
+  },
+  {
     "name": "Rejoin",
     "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/rejoin.txt"
   }
