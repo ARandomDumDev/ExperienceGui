@@ -84,34 +84,37 @@ end)
 -- Script Library
 local function LoadScripts()
     local success, result = pcall(function()
-        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.txt")
+        -- Use proper raw GitHub URL
+        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/Scripts.txt")
     end)
+
     if not success then
         ScriptsTab:CreateLabel("⚠️ Failed to load Scripts.txt")
         return
     end
 
     local scripts = {}
-    pcall(function()
-        scripts = HttpService:JSONDecode(result)
+    local decodeSuccess, decodeResult = pcall(function()
+        return HttpService:JSONDecode(result)
     end)
 
-if type(scripts) == "table" then
-    for _, scriptData in ipairs(scripts) do
-        ScriptsTab:CreateButton({
-            Name = scriptData.name or "Unnamed Script", -- lowercase
-            Callback = function()
-                if scriptData.url then                  -- lowercase
-                    loadstring(game:HttpGet(scriptData.url))()
-                elseif scriptData.code then             -- optional, lowercase
-                    loadstring(scriptData.code)()
-                end
-            end
-        })
+    if decodeSuccess then
+        scripts = decodeResult
+    else
+        ScriptsTab:CreateLabel("⚠️ Failed to decode Scripts.txt")
+        return
     end
-else
-    ScriptsTab:CreateLabel("⚠️ Invalid script format")
-end
+
+    if type(scripts) == "table" then
+        for _, scriptData in ipairs(scripts) do
+            ScriptsTab:CreateButton({
+                Name = scriptData.name or "Unnamed Script",  -- match JSON lowercase
+                Callback = function()
+                    if scriptData.url then
+                        loadstring(game:HttpGet(scriptData.url))()
+                    elseif scriptData.code then
+                        loadstring(scriptData.code)()
+                    end
                 end
             })
         end
