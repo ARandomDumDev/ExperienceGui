@@ -96,16 +96,22 @@ local function LoadScripts()
         scripts = HttpService:JSONDecode(result)
     end)
 
-    if type(scripts) == "table" then
-        for _, scriptData in ipairs(scripts) do
-            ScriptsTab:CreateButton({
-                name = scriptData.Name or "Unnamed Script",
-                Callback = function()
-                    if scriptData.URL then
-                        loadstring(game:HttpGet(scriptData.URL))()
-                    elseif scriptData.Code then
-                        loadstring(scriptData.Code)()
-                    end
+if type(scripts) == "table" then
+    for _, scriptData in ipairs(scripts) do
+        ScriptsTab:CreateButton({
+            Name = scriptData.name or "Unnamed Script", -- lowercase
+            Callback = function()
+                if scriptData.url then                  -- lowercase
+                    loadstring(game:HttpGet(scriptData.url))()
+                elseif scriptData.code then             -- optional, lowercase
+                    loadstring(scriptData.code)()
+                end
+            end
+        })
+    end
+else
+    ScriptsTab:CreateLabel("⚠️ Invalid script format")
+end
                 end
             })
         end
