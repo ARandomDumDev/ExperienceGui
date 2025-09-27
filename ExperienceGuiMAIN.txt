@@ -134,4 +134,51 @@ local function StartExperienceGui()
     return Window
 end
 
+local HttpService = game:GetService("HttpService")
+local announcementsUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/announcementsChangelogs.json"
+
+-- New tab
+local AnnTab = Window:CreateTab("News", 4483362458)
+
+local function LoadAnnouncements()
+    local success, result = pcall(function()
+        return game:HttpGet(announcementsUrl, true)
+    end)
+
+    if not success then
+        AnnTab:CreateLabel("⚠️ Failed to fetch announcements")
+        warn("HTTP GET failed:", result)
+        return
+    end
+
+    local data
+    local decodeSuccess, decodeResult = pcall(function()
+        return HttpService:JSONDecode(result)
+    end)
+
+    if not decodeSuccess then
+        AnnTab:CreateLabel("⚠️ Failed to decode announcements")
+        warn("JSON Decode failed:", decodeResult)
+        return
+    end
+
+    data = decodeResult
+
+    -- Announcement label
+    if data.announcement then
+        AnnTab:CreateLabel("📢 " .. data.announcement)
+    else
+        AnnTab:CreateLabel("📢 No announcement at this time")
+    end
+
+    -- Changelog label
+    if data.changelog then
+        AnnTab:CreateLabel(data.changelog)
+    else
+        AnnTab:CreateLabel("📝 No changelog available")
+    end
+end
+
+task.defer(LoadAnnouncements)
+
 return StartExperienceGui
