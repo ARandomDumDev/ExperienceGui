@@ -1,109 +1,146 @@
--- my minature carbonated water explosion
+-- Trip & Fling GUI (draggable + persistent)
 local player = game.Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local hrp = char:WaitForChild("HumanoidRootPart")
-local humanoid = char:WaitForChild("Humanoid")
 
--- Trip & fling with spin
-local function tripAndFling(force)
-	if humanoid.Health <= 0 then return end
-	humanoid.PlatformStand = true
-	force = force or 50
+-- Function to create GUI
+local function createTripFlingGUI()
+	-- Check if GUI already exists
+	if player.PlayerGui:FindFirstChild("TripFlingGUI") then return end
 
-	-- Linear fling
-	hrp.Velocity = Vector3.new(math.random(-force,force), math.random(25,force/1.5), math.random(-force,force))
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "TripFlingGUI"
+	screenGui.ResetOnSpawn = false -- persist on respawn
+	screenGui.Parent = player.PlayerGui
 
-	-- Spin using AngularVelocity
-	local spin = Instance.new("BodyAngularVelocity")
-	spin.MaxTorque = Vector3.new(400000,400000,400000) -- allow full rotation
-	spin.AngularVelocity = Vector3.new(math.random(-10,10), math.random(-10,10), math.random(-10,10)) * (force/10)
-	spin.P = 3000
-	spin.Parent = hrp
+	-- Frame
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0,160,0,130)
+	frame.Position = UDim2.new(0.5,-80,0.85,-65)
+	frame.AnchorPoint = Vector2.new(0.5,0.5)
+	frame.BackgroundTransparency = 0.4
+	frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	frame.BorderSizePixel = 0
+	frame.Parent = screenGui
 
-	-- Remove spin after short duration
-	task.delay(0.6, function()
-		humanoid.PlatformStand = false
-		spin:Destroy()
+	-- Dragging
+	local dragging = false
+	local dragInput, mousePos, framePos
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			mousePos = input.Position
+			framePos = frame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
 	end)
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
+	local UIS = game:GetService("UserInputService")
+	UIS.InputChanged:Connect(function(input)
+		if dragging and input == dragInput then
+			local delta = input.Position - mousePos
+			frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+		end
+	end)
+
+	-- Button
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(0,140,0,50)
+	button.Position = UDim2.new(0.5,0,0,10)
+	button.AnchorPoint = Vector2.new(0.5,0)
+	button.Text = "Trip & Fling"
+	button.TextScaled = true
+	button.BackgroundColor3 = Color3.fromRGB(255,100,100)
+	button.BorderSizePixel = 0
+	button.Parent = frame
+
+	-- Slider label
+	local sliderLabel = Instance.new("TextLabel")
+	sliderLabel.Size = UDim2.new(1, -20, 0, 30)
+	sliderLabel.Position = UDim2.new(0,10,0,70)
+	sliderLabel.BackgroundTransparency = 1
+	sliderLabel.Text = "Force: 50"
+	sliderLabel.TextScaled = true
+	sliderLabel.TextColor3 = Color3.fromRGB(255,255,255)
+	sliderLabel.Parent = frame
+
+	-- Slider
+	local sliderBar = Instance.new("Frame")
+	sliderBar.Size = UDim2.new(1, -20, 0, 10)
+	sliderBar.Position = UDim2.new(0,10,0,105)
+	sliderBar.BackgroundColor3 = Color3.fromRGB(200,200,200)
+	sliderBar.BorderSizePixel = 0
+	sliderBar.Parent = frame
+
+	local sliderKnob = Instance.new("Frame")
+	sliderKnob.Size = UDim2.new(0,20,1,0)
+	sliderKnob.Position = UDim2.new(0.5,0,0,0)
+	sliderKnob.BackgroundColor3 = Color3.fromRGB(255,0,0)
+	sliderKnob.BorderSizePixel = 0
+	sliderKnob.Parent = sliderBar
+
+	local force = 50
+	local knobDragging = false
+
+	local function updateForce(x)
+		local relative = math.clamp((x - sliderBar.AbsolutePosition.X)/sliderBar.AbsoluteSize.X, 0, 1)
+		force = math.floor(relative * 100)
+		sliderLabel.Text = "Force: "..force
+		sliderKnob.Position = UDim2.new(relative,0,0,0)
+	end
+
+	sliderKnob.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			knobDragging = true
+		end
+	end)
+	sliderKnob.InputEnded:Connect(function(input)
+		knobDragging = false
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if knobDragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+			updateForce(input.Position.X)
+		end
+	end)
+
+	-- Trip & Fling + Spin
+	local function tripAndFling()
+		local char = player.Character
+		if not char then return end
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		local humanoid = char:FindFirstChild("Humanoid")
+		if not hrp or not humanoid then return end
+		if humanoid.Health <= 0 then return end
+
+		humanoid.PlatformStand = true
+		hrp.Velocity = Vector3.new(math.random(-force,force), math.random(25,force/1.5), math.random(-force,force))
+
+		local spin = Instance.new("BodyAngularVelocity")
+		spin.MaxTorque = Vector3.new(400000,400000,400000)
+		spin.AngularVelocity = Vector3.new(math.random(-10,10), math.random(-10,10), math.random(-10,10)) * (force/10)
+		spin.P = 3000
+		spin.Parent = hrp
+
+		task.delay(0.6, function()
+			humanoid.PlatformStand = false
+			spin:Destroy()
+		end)
+	end
+
+	button.MouseButton1Click:Connect(tripAndFling)
 end
 
--- GUI Setup
-local playerGui = player:WaitForChild("PlayerGui")
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "TripFlingGUI"
-screenGui.Parent = playerGui
+-- Initial GUI creation
+createTripFlingGUI()
 
--- Frame
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,160,0,130)
-frame.Position = UDim2.new(0.5,-80,0.85,-65)
-frame.AnchorPoint = Vector2.new(0.5,0.5)
-frame.BackgroundTransparency = 0.4
-frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
-frame.BorderSizePixel = 0
-frame.Parent = screenGui
-
--- Button
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0,140,0,50)
-button.Position = UDim2.new(0.5,0,0,10)
-button.AnchorPoint = Vector2.new(0.5,0)
-button.Text = "Trip & Fling"
-button.TextScaled = true
-button.BackgroundColor3 = Color3.fromRGB(255,100,100)
-button.BorderSizePixel = 0
-button.Parent = frame
-
--- Slider label
-local sliderLabel = Instance.new("TextLabel")
-sliderLabel.Size = UDim2.new(1, -20, 0, 30)
-sliderLabel.Position = UDim2.new(0,10,0,70)
-sliderLabel.BackgroundTransparency = 1
-sliderLabel.Text = "Force: 50"
-sliderLabel.TextScaled = true
-sliderLabel.TextColor3 = Color3.fromRGB(255,255,255)
-sliderLabel.Parent = frame
-
--- Slider
-local sliderBar = Instance.new("Frame")
-sliderBar.Size = UDim2.new(1, -20, 0, 10)
-sliderBar.Position = UDim2.new(0,10,0,105)
-sliderBar.BackgroundColor3 = Color3.fromRGB(200,200,200)
-sliderBar.BorderSizePixel = 0
-sliderBar.Parent = frame
-
-local sliderKnob = Instance.new("Frame")
-sliderKnob.Size = UDim2.new(0,20,1,0)
-sliderKnob.Position = UDim2.new(0.5,0,0,0)
-sliderKnob.BackgroundColor3 = Color3.fromRGB(255,0,0)
-sliderKnob.BorderSizePixel = 0
-sliderKnob.Parent = sliderBar
-
-local UIS = game:GetService("UserInputService")
-local force = 50
-local dragging = false
-
-local function updateForce(x)
-	local relative = math.clamp((x - sliderBar.AbsolutePosition.X)/sliderBar.AbsoluteSize.X, 0, 1)
-	force = math.floor(relative * 100)
-	sliderLabel.Text = "Force: "..force
-	sliderKnob.Position = UDim2.new(relative,0,0,0)
-end
-
-sliderKnob.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-	end
-end)
-sliderKnob.InputEnded:Connect(function(input)
-	dragging = false
-end)
-UIS.InputChanged:Connect(function(input)
-	if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
-		updateForce(input.Position.X)
-	end
-end)
-
-button.MouseButton1Click:Connect(function()
-	tripAndFling(force)
+-- Recreate GUI on respawn (persistent)
+player.CharacterAdded:Connect(function()
+	task.wait(1)
+	createTripFlingGUI()
 end)
