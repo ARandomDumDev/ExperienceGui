@@ -1,3 +1,5 @@
+-- important bug patch
+
 local function StartExperienceGui()
     local HttpService = game:GetService("HttpService")
     local Players = game:GetService("Players")
@@ -130,24 +132,13 @@ local function StartExperienceGui()
         pcall(LoadScriptLibrary)
     end)
 
-    local function StartExperienceGui()
-    local HttpService = game:GetService("HttpService")
-    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-
-    local Window = Rayfield:CreateWindow({
-        Name = "ExperienceGui",
-        LoadingTitle = "ExperienceGui",
-        LoadingSubtitle = "Made by CoolDown",
-    })
-
-    local AnnTab = Window:CreateTab("News", 4483362458)
-
+    -- Announcements + Changelog
     local announcementsUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/announcementsChangelogs.json"
     local announcementLabels = {}
 
     local function ClearOldLabels()
         for _, label in ipairs(announcementLabels) do
-            label:Set("Text", "") -- Rayfield workaround
+            label:Set("Text", "")
         end
         announcementLabels = {}
     end
@@ -199,5 +190,5 @@ local function StartExperienceGui()
     end)
 end
 
--- Call the function
+-- Call once
 StartExperienceGui()
