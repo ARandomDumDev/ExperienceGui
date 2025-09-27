@@ -18,5 +18,9 @@
   {
     "name": "Rejoin",
     "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/rejoin.txt"
+  },
+  {
+    "name": "Experience No Gravity",
+    "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/rejoin.txt"
   }
 ]
