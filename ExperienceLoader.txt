@@ -1,4 +1,4 @@
--- ExperienceLoadee 0.04
+-- ExperienceLoader 0.04
 
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
 local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
