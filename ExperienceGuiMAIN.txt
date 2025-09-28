@@ -1,4 +1,4 @@
--- fixed uhh infinite loop
+-- important bug patch
 -- main gui not loader
 
 local function StartExperienceGui()
@@ -208,79 +208,6 @@ local function StartExperienceGui()
         while true do
             LoadAnnouncements()
             task.wait(60) -- refresh every 60s
-
-local SettingsTab = Window:CreateTab("Settings", 4483362458)
-
--- Store default theme
-local currentTheme = "Default"
-
--- Predefined themes
-local themes = {
-    ["Default"] = {
-        Background = Color3.fromRGB(30, 30, 30),
-        Accent = Color3.fromRGB(0, 162, 255),
-        Text = Color3.fromRGB(255, 255, 255)
-    },
-    ["Light"] = {
-        Background = Color3.fromRGB(245, 245, 245),
-        Accent = Color3.fromRGB(0, 120, 212),
-        Text = Color3.fromRGB(20, 20, 20)
-    },
-    ["Neon"] = {
-        Background = Color3.fromRGB(15, 15, 25),
-        Accent = Color3.fromRGB(255, 0, 255),
-        Text = Color3.fromRGB(0, 255, 255)
-    },
-    ["Red"] = {
-        Background = Color3.fromRGB(25, 10, 10),
-        Accent = Color3.fromRGB(255, 50, 50),
-        Text = Color3.fromRGB(255, 200, 200)
-    }
-}
-
--- Apply theme function
-local function applyTheme(themeName)
-    local theme = themes[themeName]
-    if not theme then return end
-
-    -- Example: modify Rayfield elements
-    game:GetService("CoreGui").Rayfield.Main.BackgroundColor3 = theme.Background
-    game:GetService("CoreGui").Rayfield.Main.UIStroke.Color = theme.Accent
-
-    for _, obj in ipairs(game:GetService("CoreGui").Rayfield.Main:GetDescendants()) do
-        if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-            obj.TextColor3 = theme.Text
-        elseif obj:IsA("Frame") or obj:IsA("ScrollingFrame") then
-            obj.BackgroundColor3 = theme.Background
-        end
-    end
-
-    currentTheme = themeName
-end
-
--- Dropdown to pick theme
-SettingsTab:CreateDropdown({
-    Name = "Theme",
-    Options = {"Default", "Light", "Neon", "Red"},
-    CurrentOption = "Default",
-    Callback = function(option)
-        applyTheme(option)
-    end
-})
-
--- Button to reset
-SettingsTab:CreateButton({
-    Name = "Reset Theme",
-    Callback = function()
-        applyTheme("Default")
-        Rayfield:Notify({
-            Title = "Theme Reset",
-            Content = "Reverted back to Default theme.",
-            Duration = 3
-        })
-    end
-})
-
         end
     end)
 end
