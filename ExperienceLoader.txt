@@ -7,7 +7,16 @@ local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
 local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
 
--- Maintenance GUI
+-- 🔹 Preloader GUI
+local preloaderWin = Rayfield:CreateWindow({
+    Name = "ExperienceGui - Loading",
+    LoadingTitle = "Loading…",
+    LoadingSubtitle = "Please don’t spam, I know you will spam",
+})
+local preloaderTab = preloaderWin:CreateTab("Status", 4483362458)
+local preloaderLabel = preloaderTab:CreateLabel("Fetching config.json...")
+
+-- 🔹 Maintenance GUI (hidden by default)
 local maintenanceWin = Rayfield:CreateWindow({
     Name = "ExperienceGui - Maintenance",
     LoadingTitle = "Maintenance",
@@ -16,21 +25,20 @@ local maintenanceWin = Rayfield:CreateWindow({
 local maintenanceTab = maintenanceWin:CreateTab("Notice", 4483362458)
 local maintenanceLabel = maintenanceTab:CreateLabel("Checking status...")
 
--- Hide it by default
 maintenanceWin:SetVisibility(false)
 
 -- Holder for main GUI
 local currentGui
 local currentVersion
 
--- Function to load main GUI
+-- Load main GUI
 local function loadGui()
     local source = game:HttpGet(scriptUrl)
     local fn = loadstring(source)
     currentGui = fn()
 end
 
--- Function to unload main GUI
+-- Unload main GUI
 local function unloadGui()
     if currentGui and currentGui.Destroy then
         currentGui:Destroy()
@@ -38,23 +46,27 @@ local function unloadGui()
     currentGui = nil
 end
 
--- Poll config.json
+-- 🔹 Poll config.json
 task.spawn(function()
     while task.wait(10) do
         local ok, result = pcall(function()
             return game:HttpGet(configUrl)
         end)
+
         if ok then
             local cfg = HttpService:JSONDecode(result)
 
+            -- Hide preloader after first successful config fetch
+            if preloaderWin then
+                preloaderWin:SetVisibility(false)
+                preloaderWin = nil
+            end
+
             if cfg.maintenance then
-                -- Show maintenance instantly
                 unloadGui()
                 maintenanceLabel:Set(cfg.message or "Down for maintenance.")
                 maintenanceWin:SetVisibility(true)
-
             else
-                -- Hide maintenance & load main
                 maintenanceWin:SetVisibility(false)
 
                 if (not currentGui) or (cfg.version and cfg.version ~= currentVersion) then
@@ -62,6 +74,10 @@ task.spawn(function()
                     loadGui()
                     currentVersion = cfg.version
                 end
+            end
+        else
+            if preloaderLabel then
+                preloaderLabel:Set("Failed to fetch config, retrying...")
             end
         end
     end
