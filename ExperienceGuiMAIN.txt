@@ -1,4 +1,5 @@
 -- important bug patch
+-- main gui not loader
 
 local function StartExperienceGui()
     local HttpService = game:GetService("HttpService")
