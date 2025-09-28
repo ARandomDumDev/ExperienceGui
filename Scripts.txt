@@ -16,8 +16,8 @@
     "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/flingyourself.txt"
   },
   {
-    "name": "Experience No Gravity",
-    "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/zerogravity.txt"
+    "name": "R15 Animations",
+    "url": "https://raw.githubusercontent.com/kuragalol/r15/main/reanimation"
   },
   {
     "name": "Fling Things And People",
