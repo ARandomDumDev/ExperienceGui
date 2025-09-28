@@ -13,6 +13,20 @@ local function StartExperienceGui()
         end
     end
 
+    -- Grab version from config.json
+    local version = "Unknown"
+    local ok, result = pcall(function()
+        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json")
+    end)
+    if ok then
+        local decodeOk, decoded = pcall(function()
+            return HttpService:JSONDecode(result)
+        end)
+        if decodeOk and decoded.version then
+            version = decoded.version
+        end
+    end
+
     -- Load Rayfield
     local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
@@ -45,7 +59,7 @@ local function StartExperienceGui()
     HomeTab:CreateLabel("Welcome to ExperienceGui")
     HomeTab:CreateLabel("Made by CoolDown")
     HomeTab:CreateLabel("Client: " .. LocalPlayer.Name)
-    HomeTab:CreateLabel("Version 2.05")
+    HomeTab:CreateLabel("Version " .. version)
 
     -- Needs tab
     NeedsTab:CreateSlider({
