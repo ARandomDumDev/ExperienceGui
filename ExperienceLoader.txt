@@ -1,4 +1,4 @@
--- ExperienceLoader 0.03
+-- ExperienceLoadee 0.04
 
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
 local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
@@ -7,12 +7,12 @@ local HttpService = game:GetService("HttpService")
 
 local currentGui
 local currentVersion
-local maintenanceGui
+local isMaintenance = false
 
 local function loadGui()
     local source = game:HttpGet(scriptUrl)
     local fn = loadstring(source)
-    currentGui = fn() -- Your main GUI should return the Window
+    currentGui = fn()
 end
 
 local function unloadGui()
@@ -23,7 +23,7 @@ local function unloadGui()
 end
 
 local function showMaintenance(message)
-    if maintenanceGui then return end
+    unloadGui()
     local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
     local win = Rayfield:CreateWindow({
         Name = "ExperienceGui - Maintenance",
@@ -31,40 +31,36 @@ local function showMaintenance(message)
         LoadingSubtitle = "Please wait...",
     })
     win:CreateTab("Notice", 4483362458):CreateLabel(message or "Down for maintenance.")
-    maintenanceGui = win
+    currentGui = win
 end
 
-local function hideMaintenance()
-    if maintenanceGui and maintenanceGui.Destroy then
-        maintenanceGui:Destroy()
-    end
-    maintenanceGui = nil
-end
-
--- First check + initial load
+-- Poll config.json
 task.spawn(function()
-    while true do
+    while task.wait(10) do
         local ok, result = pcall(function()
             return game:HttpGet(configUrl)
         end)
 
         if ok then
             local cfg = HttpService:JSONDecode(result)
+
             if cfg.maintenance then
-                unloadGui()
-                showMaintenance(cfg.message)
+                if not isMaintenance then
+                    showMaintenance(cfg.message)
+                    isMaintenance = true
+                end
             else
-                hideMaintenance()
-                if not currentGui or (cfg.version and cfg.version ~= currentVersion) then
+                if isMaintenance or not currentGui then
+                    unloadGui()
+                    loadGui()
+                    currentVersion = cfg.version
+                    isMaintenance = false
+                elseif cfg.version and cfg.version ~= currentVersion then
                     unloadGui()
                     loadGui()
                     currentVersion = cfg.version
                 end
             end
-        else
-            warn("Failed to fetch config:", result)
         end
-
-        task.wait(10) -- check every 10s
     end
 end)
