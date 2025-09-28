@@ -1,4 +1,4 @@
---// ExperienceGui Loader 0.02
+-- ExperienceLoader 0.03
 
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
 local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
@@ -6,81 +6,65 @@ local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui
 local HttpService = game:GetService("HttpService")
 
 local currentGui
-local currentMode -- "main" or "maintenance"
 local currentVersion
+local maintenanceGui
 
--- Destroy current window if exists
+local function loadGui()
+    local source = game:HttpGet(scriptUrl)
+    local fn = loadstring(source)
+    currentGui = fn() -- Your main GUI should return the Window
+end
+
 local function unloadGui()
     if currentGui and currentGui.Destroy then
-        pcall(function() currentGui:Destroy() end)
+        currentGui:Destroy()
     end
     currentGui = nil
 end
 
--- Load main gui
-local function loadMain()
-    unloadGui()
-    local ok, src = pcall(function()
-        return game:HttpGet(scriptUrl)
-    end)
-    if ok then
-        local fn = loadstring(src)
-        currentGui = fn() -- must return the Rayfield window
-        currentMode = "main"
-    else
-        warn("Failed to load main GUI:", src)
-    end
-end
-
--- Load maintenance gui
-local function loadMaintenance(message)
-    unloadGui()
+local function showMaintenance(message)
+    if maintenanceGui then return end
     local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
     local win = Rayfield:CreateWindow({
         Name = "ExperienceGui - Maintenance",
         LoadingTitle = "Maintenance",
         LoadingSubtitle = "Please wait...",
     })
-    local tab = win:CreateTab("Notice", 4483362458)
-    tab:CreateLabel(message or "Down for maintenance.")
-    currentGui = win
-    currentMode = "maintenance"
+    win:CreateTab("Notice", 4483362458):CreateLabel(message or "Down for maintenance.")
+    maintenanceGui = win
 end
 
--- Show preloader right away
-loadMaintenance("⏳ Loading… Please don’t spam, I know you will spam.")
+local function hideMaintenance()
+    if maintenanceGui and maintenanceGui.Destroy then
+        maintenanceGui:Destroy()
+    end
+    maintenanceGui = nil
+end
 
--- Poll config.json
+-- First check + initial load
 task.spawn(function()
-    while task.wait(10) do
+    while true do
         local ok, result = pcall(function()
             return game:HttpGet(configUrl)
         end)
-        if not ok then
-            warn("Config fetch failed:", result)
-            continue
-        end
 
-        local cfg
-        local decodeOk, decodeRes = pcall(function()
-            return HttpService:JSONDecode(result)
-        end)
-        if not decodeOk then
-            warn("Config decode failed:", decodeRes)
-            continue
-        end
-        cfg = decodeRes
-
-        if cfg.maintenance then
-            if currentMode ~= "maintenance" then
-                loadMaintenance(cfg.message)
+        if ok then
+            local cfg = HttpService:JSONDecode(result)
+            if cfg.maintenance then
+                unloadGui()
+                showMaintenance(cfg.message)
+            else
+                hideMaintenance()
+                if not currentGui or (cfg.version and cfg.version ~= currentVersion) then
+                    unloadGui()
+                    loadGui()
+                    currentVersion = cfg.version
+                end
             end
-        elseif cfg.version and cfg.version ~= currentVersion then
-            currentVersion = cfg.version
-            loadMain()
-        elseif not currentGui then
-            -- No GUI open yet, load main
-            loadMain()
+        else
+            warn("Failed to fetch config:", result)
         end
+
+        task.wait(10) -- check every 10s
     end
 end)
