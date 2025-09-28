@@ -1,4 +1,4 @@
--- important bug patch
+-- fixed uhh infinite loop
 -- main gui not loader
 
 local function StartExperienceGui()
