@@ -1,6 +1,6 @@
 {
   "version": "2.05",
-  "maintenance": false,
+  "maintenance": true,
   "message": "We’re fixing bugs!"
 }
 
