@@ -5,22 +5,32 @@ local HttpService = game:GetService("HttpService")
 
 local currentGui
 local currentVersion
+local isMaintenance = false
 
 local function loadGui()
     local source = game:HttpGet(scriptUrl)
     local fn = loadstring(source)
-    currentGui = fn()  -- returns Window
+    currentGui = fn()
 end
 
 local function unloadGui()
     if currentGui and currentGui.Destroy then
-        currentGui:Destroy()  -- Rayfield windows can be destroyed
+        currentGui:Destroy()
     end
     currentGui = nil
 end
 
--- Initial load
-loadGui()
+local function showMaintenance(message)
+    unloadGui()
+    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+    local win = Rayfield:CreateWindow({
+        Name = "ExperienceGui - Maintenance",
+        LoadingTitle = "Maintenance",
+        LoadingSubtitle = "Please wait...",
+    })
+    win:CreateTab("Notice", 4483362458):CreateLabel(message or "Down for maintenance.")
+    currentGui = win
+end
 
 -- Poll config.json
 task.spawn(function()
@@ -28,22 +38,26 @@ task.spawn(function()
         local ok, result = pcall(function()
             return game:HttpGet(configUrl)
         end)
+
         if ok then
             local cfg = HttpService:JSONDecode(result)
+
             if cfg.maintenance then
-                unloadGui()
-                -- Show maintenance message
-                local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-                local win = Rayfield:CreateWindow({
-                    Name = "ExperienceGui - Maintenance",
-                    LoadingTitle = "Maintenance",
-                    LoadingSubtitle = "Please wait...",
-                })
-                win:CreateTab("Notice", 4483362458):CreateLabel(cfg.message or "Down for maintenance.")
-            elseif cfg.version and cfg.version ~= currentVersion then
-                unloadGui()
-                loadGui()
-                currentVersion = cfg.version
+                if not isMaintenance then
+                    showMaintenance(cfg.message)
+                    isMaintenance = true
+                end
+            else
+                if isMaintenance or not currentGui then
+                    unloadGui()
+                    loadGui()
+                    currentVersion = cfg.version
+                    isMaintenance = false
+                elseif cfg.version and cfg.version ~= currentVersion then
+                    unloadGui()
+                    loadGui()
+                    currentVersion = cfg.version
+                end
             end
         end
     end
