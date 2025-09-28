@@ -1,5 +1,4 @@
--- ExperienceLoader 1
-
+-- ExperienceLoader 1.1
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
 local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
 
@@ -8,15 +7,13 @@ local currentGui
 local currentVersion
 local isMaintenance = false
 
--- Load GUI from script
 local function loadGui()
     local source = game:HttpGet(scriptUrl)
     local fn = loadstring(source)
-    -- The main GUI now returns a GUI object
+    -- GUI now returns a window object
     currentGui = fn()
 end
 
--- Properly unload GUI
 local function unloadGui()
     if currentGui and currentGui.Destroy then
         currentGui:Destroy()
@@ -24,7 +21,6 @@ local function unloadGui()
     currentGui = nil
 end
 
--- Maintenance mode
 local function showMaintenance(message)
     unloadGui()
     local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
