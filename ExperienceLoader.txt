@@ -1,6 +1,5 @@
 -- ExperienceLoader 1
 
--- ExperienceLoader 0.05 (Fixed for compatibility)
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
 local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
 
