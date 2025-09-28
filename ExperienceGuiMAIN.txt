@@ -6,6 +6,13 @@ local function StartExperienceGui()
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
 
+    -- Destroy maintenance GUI if still open
+    for _, gui in ipairs(game.CoreGui:GetChildren()) do
+        if gui.Name:find("ExperienceGui - Maintenance") then
+            gui:Destroy()
+        end
+    end
+
     -- Load Rayfield
     local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
