@@ -1,4 +1,4 @@
--- important fix
+-- experienceguimain | MY MINATURE CARBONATED FLAVORED WATER
 
 local function StartExperienceGui()
     local HttpService = game:GetService("HttpService")
@@ -22,7 +22,7 @@ local function StartExperienceGui()
         LoadingSubtitle = "Made by CoolDown",
         ConfigurationSaving = { Enabled = true, FolderName = "ExperienceGui", FileName = "Config" },
         Discord = { Enabled = false },
-        KeySystem = true, -- KeySystem enabled
+        KeySystem = true,
         KeySettings = {
             Title = "ExperienceGui Access",
             Subtitle = "Enter Password",
@@ -55,6 +55,46 @@ local function StartExperienceGui()
     local HomeTab = Window:CreateTab("Home", 4483362458)
     local NeedsTab = Window:CreateTab("Basic Needs", 4483362458)
     local ScriptsTab = Window:CreateTab("Script Library", 4483362458)
+
+    -- SCRIPT EXECUTOR TAB (before News)
+    local ExecTab = Window:CreateTab("Script Executor", 4483362458)
+    local Section = ExecTab:CreateSection("Run Custom Code")
+    local codeString, urlString = "", ""
+    local CodeInput = ExecTab:CreateInput({
+        Name = "Lua Code",
+        PlaceholderText = "Type Lua code here...",
+        RemoveTextAfterFocusLost = false,
+        Callback = function(text) codeString = text end,
+    })
+    local URLInput = ExecTab:CreateInput({
+        Name = "Script URL",
+        PlaceholderText = "Type script URL here...",
+        RemoveTextAfterFocusLost = false,
+        Callback = function(text) urlString = text end,
+    })
+    ExecTab:CreateButton({
+        Name = "Execute",
+        Callback = function()
+            if codeString ~= "" then
+                local ok, err = pcall(function()
+                    loadstring(codeString)()
+                end)
+                if not ok then warn("Failed to execute Lua code:", err) end
+            elseif urlString ~= "" then
+                local ok, err = pcall(function()
+                    local scriptText = game:HttpGet(urlString)
+                    loadstring(scriptText)()
+                end)
+                if not ok then warn("Failed to execute URL script:", err) end
+            end
+            -- Clear input fields
+            codeString = ""
+            urlString = ""
+            ExecTab.Elements["Lua Code"].element.InputFrame.InputBox.Text = ""
+            ExecTab.Elements["Script URL"].element.InputFrame.InputBox.Text = ""
+        end,
+    })
+
     local AnnTab = Window:CreateTab("News", 4483362458)
 
     -- Version from config
@@ -180,7 +220,6 @@ local function StartExperienceGui()
 
     local function LoadAnnouncements()
         ClearOldLabels()
-
         local success, result = pcall(function()
             return game:HttpGet(announcementsUrl, true)
         end)
