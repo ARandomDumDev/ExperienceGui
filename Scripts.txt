@@ -17,7 +17,7 @@
   },
   {
     "name": "R15 Animations",
-    "url": "https://raw.githubusercontent.com/Emerson2-creator/Scripts-Roblox/refs/heads/main/animationsHubV3.lua"
+    "url": "https://pastebin.com/raw/hdYTy0Pu"
   },
   {
     "name": "Fling Things And People",
