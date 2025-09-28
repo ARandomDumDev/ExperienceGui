@@ -1,35 +1,41 @@
+local HttpService = game:GetService("HttpService")
+
+-- Cache Rayfield once
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+-- URLs
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
 local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
 
-local HttpService = game:GetService("HttpService")
+-- Maintenance GUI
+local maintenanceWin = Rayfield:CreateWindow({
+    Name = "ExperienceGui - Maintenance",
+    LoadingTitle = "Maintenance",
+    LoadingSubtitle = "Please wait...",
+})
+local maintenanceTab = maintenanceWin:CreateTab("Notice", 4483362458)
+local maintenanceLabel = maintenanceTab:CreateLabel("Checking status...")
 
+-- Hide it by default
+maintenanceWin:SetVisibility(false)
+
+-- Holder for main GUI
 local currentGui
 local currentVersion
-local isMaintenance = false
 
+-- Function to load main GUI
 local function loadGui()
     local source = game:HttpGet(scriptUrl)
     local fn = loadstring(source)
     currentGui = fn()
 end
 
+-- Function to unload main GUI
 local function unloadGui()
     if currentGui and currentGui.Destroy then
         currentGui:Destroy()
     end
     currentGui = nil
-end
-
-local function showMaintenance(message)
-    unloadGui()
-    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-    local win = Rayfield:CreateWindow({
-        Name = "ExperienceGui - Maintenance",
-        LoadingTitle = "Maintenance",
-        LoadingSubtitle = "Please wait...",
-    })
-    win:CreateTab("Notice", 4483362458):CreateLabel(message or "Down for maintenance.")
-    currentGui = win
 end
 
 -- Poll config.json
@@ -38,22 +44,20 @@ task.spawn(function()
         local ok, result = pcall(function()
             return game:HttpGet(configUrl)
         end)
-
         if ok then
             local cfg = HttpService:JSONDecode(result)
 
             if cfg.maintenance then
-                if not isMaintenance then
-                    showMaintenance(cfg.message)
-                    isMaintenance = true
-                end
+                -- Show maintenance instantly
+                unloadGui()
+                maintenanceLabel:Set(cfg.message or "Down for maintenance.")
+                maintenanceWin:SetVisibility(true)
+
             else
-                if isMaintenance or not currentGui then
-                    unloadGui()
-                    loadGui()
-                    currentVersion = cfg.version
-                    isMaintenance = false
-                elseif cfg.version and cfg.version ~= currentVersion then
+                -- Hide maintenance & load main
+                maintenanceWin:SetVisibility(false)
+
+                if (not currentGui) or (cfg.version and cfg.version ~= currentVersion) then
                     unloadGui()
                     loadGui()
                     currentVersion = cfg.version
