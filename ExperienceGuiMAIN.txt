@@ -1,27 +1,9 @@
--- scriptblox api very very cool
+-- experienceguimain | MY MINATURE CARBONATED FLAVORED WATER
 
 local function StartExperienceGui()
     local HttpService = game:GetService("HttpService")
     local Players = game:GetService("Players")
     local LocalPlayer = Players.LocalPlayer
-
-    -- Helper functions
-    local function safeGet(url)
-        local ok, res = pcall(function() return HttpService:GetAsync(url) end)
-        if ok then return res end
-        return nil, res
-    end
-
-    local function sanitizeFilename(name)
-        -- Replace characters that may break filenames with underscore
-        return name:gsub("[^%w%-%_ ]", "_"):gsub("%s+", "_")
-    end
-
-    local function ensureFolder(folderName)
-        if (type(isfolder) == "function") and not isfolder(folderName) then
-            pcall(function() makefolder(folderName) end)
-        end
-    end
 
     -- Destroy leftover maintenance GUI
     for _, gui in ipairs(game.CoreGui:GetChildren()) do
@@ -76,7 +58,7 @@ local function StartExperienceGui()
 
     -- SCRIPT EXECUTOR TAB (before News)
     local ExecTab = Window:CreateTab("Script Executor", 4483362458)
-    local _ = ExecTab:CreateSection("Run Custom Code")
+    local Section = ExecTab:CreateSection("Run Custom Code")
     local codeString, urlString = "", ""
     local CodeInput = ExecTab:CreateInput({
         Name = "Lua Code",
@@ -86,7 +68,7 @@ local function StartExperienceGui()
     })
     local URLInput = ExecTab:CreateInput({
         Name = "Script URL",
-        PlaceholderText = "Type script URL here (raw .lua URL)...",
+        PlaceholderText = "Type script URL here...",
         RemoveTextAfterFocusLost = false,
         Callback = function(text) urlString = text end,
     })
@@ -95,264 +77,37 @@ local function StartExperienceGui()
         Callback = function()
             if codeString ~= "" then
                 local ok, err = pcall(function()
-                    local fn = loadstring(codeString)
-                    if fn then fn() end
+                    loadstring(codeString)()
                 end)
                 if not ok then warn("Failed to execute Lua code:", err) end
             elseif urlString ~= "" then
                 local ok, err = pcall(function()
                     local scriptText = game:HttpGet(urlString)
-                    local fn = loadstring(scriptText)
-                    if fn then fn() end
+                    loadstring(scriptText)()
                 end)
                 if not ok then warn("Failed to execute URL script:", err) end
-            else
-                Rayfield:Notify({Title = "Execute", Content = "No code or URL provided.", Duration = 2})
             end
-            -- Clear inputs
+            -- Clear input fields
             codeString = ""
             urlString = ""
-            pcall(function() ExecTab.Elements["Lua Code"].element.InputFrame.InputBox.Text = "" end)
-            pcall(function() ExecTab.Elements["Script URL"].element.InputFrame.InputBox.Text = "" end)
+            ExecTab.Elements["Lua Code"].element.InputFrame.InputBox.Text = ""
+            ExecTab.Elements["Script URL"].element.InputFrame.InputBox.Text = ""
         end,
     })
 
-    -- ScriptBlox Tab
-    local SBTab = Window:CreateTab("ScriptBlox", 4483362458)
-    local trendingSection = SBTab:CreateSection("Trending")
-    local latestSection = SBTab:CreateSection("Latest")
-    local searchSection = SBTab:CreateSection("Search")
-
-    -- ScriptBlox helpers
-    local function fetchTrending()
-        trendingSection:CreateLabel("Fetching trending...")
-        local res, err = safeGet("https://scriptblox.com/api/script/trending")
-        trendingSection:CreateLabel("") -- spacer
-        if not res then
-            trendingSection:CreateLabel("⚠️ Failed to fetch trending: "..tostring(err))
-            return
-        end
-        local ok, data = pcall(function() return HttpService:JSONDecode(res) end)
-        if not ok or not data or not data.result or not data.result.scripts then
-            trendingSection:CreateLabel("⚠️ Unexpected response for trending")
-            return
-        end
-
-        for _, script in ipairs(data.result.scripts) do
-            local title = script.title or "Untitled"
-            local gameName = (script.game and script.game.name) and ("[" .. script.game.name .. "]") or ""
-            trendingSection:CreateLabel(title .. " " .. gameName)
-
-            -- Execute (needs raw fetch)
-            trendingSection:CreateButton({
-                Name = "Execute "..title,
-                Callback = function()
-                    local rawRes, rawErr = safeGet("https://scriptblox.com/api/script/raw/" .. tostring(script._id))
-                    if not rawRes then
-                        Rayfield:Notify({Title="Execute", Content="Failed to fetch raw script.", Duration=2})
-                        return
-                    end
-                    local ok2, rawData = pcall(function() return HttpService:JSONDecode(rawRes) end)
-                    local code = nil
-                    if ok2 and rawData then
-                        code = rawData.script or rawData.raw or rawData.code
-                    end
-                    if not code then
-                        Rayfield:Notify({Title="Execute", Content="No code found for this script.", Duration=2})
-                        return
-                    end
-                    local success, err = pcall(function()
-                        local fn = loadstring(code)
-                        if fn then fn() end
-                    end)
-                    if not success then warn("ScriptBlox trending execute error:", err) end
-                end
-            })
-
-            -- Save
-            trendingSection:CreateButton({
-                Name = "Save "..title,
-                Callback = function()
-                    local rawRes, rawErr = safeGet("https://scriptblox.com/api/script/raw/" .. tostring(script._id))
-                    if not rawRes then
-                        Rayfield:Notify({Title="Save", Content="Failed to fetch raw script.", Duration=2})
-                        return
-                    end
-                    local ok2, rawData = pcall(function() return HttpService:JSONDecode(rawRes) end)
-                    local code = nil
-                    if ok2 and rawData then
-                        code = rawData.script or rawData.raw or rawData.code
-                    end
-                    if not code then
-                        Rayfield:Notify({Title="Save", Content="No code to save.", Duration=2})
-                        return
-                    end
-                    ensureFolder("ExperienceGui")
-                    local filename = sanitizeFilename(title)
-                    local path = "ExperienceGui/" .. filename .. ".lua"
-                    local okw, errw = pcall(function() writefile(path, code) end)
-                    if okw then
-                        Rayfield:Notify({Title="Saved", Content=title.." saved.", Duration=2})
-                        -- update Script Library later by user refresh or on next open
-                    else
-                        Rayfield:Notify({Title="Save Failed", Content=tostring(errw), Duration=2})
-                    end
-                end
-            })
-        end
-    end
-
-    local function fetchLatest()
-        latestSection:CreateLabel("Fetching latest...")
-        local res, err = safeGet("https://scriptblox.com/api/script/fetch")
-        latestSection:CreateLabel("") -- spacer
-        if not res then
-            latestSection:CreateLabel("⚠️ Failed to fetch latest: "..tostring(err))
-            return
-        end
-        local ok, data = pcall(function() return HttpService:JSONDecode(res) end)
-        if not ok or not data or not data.result or not data.result.scripts then
-            latestSection:CreateLabel("⚠️ Unexpected response for latest")
-            return
-        end
-
-        for _, script in ipairs(data.result.scripts) do
-            local title = script.title or "Untitled"
-            local gameName = (script.game and script.game.name) and ("[" .. script.game.name .. "]") or ""
-            latestSection:CreateLabel(title .. " " .. gameName)
-
-            -- Execute (script text available)
-            latestSection:CreateButton({
-                Name = "Execute "..title,
-                Callback = function()
-                    if not script.script then
-                        Rayfield:Notify({Title="Execute", Content="No script content available.", Duration=2})
-                        return
-                    end
-                    local ok2, err2 = pcall(function()
-                        local fn = loadstring(script.script)
-                        if fn then fn() end
-                    end)
-                    if not ok2 then warn("ScriptBlox latest execute error:", err2) end
-                end
-            })
-
-            -- Save
-            latestSection:CreateButton({
-                Name = "Save "..title,
-                Callback = function()
-                    if not script.script then
-                        Rayfield:Notify({Title="Save", Content="No script content available.", Duration=2})
-                        return
-                    end
-                    ensureFolder("ExperienceGui")
-                    local filename = sanitizeFilename(title)
-                    local path = "ExperienceGui/" .. filename .. ".lua"
-                    local okw, errw = pcall(function() writefile(path, script.script) end)
-                    if okw then
-                        Rayfield:Notify({Title="Saved", Content=title.." saved.", Duration=2})
-                    else
-                        Rayfield:Notify({Title="Save Failed", Content=tostring(errw), Duration=2})
-                    end
-                end
-            })
-        end
-    end
-
-    -- Search UI and action
-    local searchQuery = ""
-    local SearchInput = SBTab:CreateInput({
-        Name = "Search Query",
-        PlaceholderText = "keywords...",
-        RemoveTextAfterFocusLost = false,
-        Callback = function(text) searchQuery = text end,
-    })
-    SBTab:CreateButton({
-        Name = "Search",
-        Callback = function()
-            if (not searchQuery) or searchQuery == "" then
-                Rayfield:Notify({Title="Search", Content="Enter a query first.", Duration=2})
-                return
-            end
-            -- Clear previous dynamic labels in search section (best-effort)
-            searchSection:CreateLabel("Searching for: "..searchQuery)
-            local url = "https://scriptblox.com/api/script/search?q=" .. HttpService:UrlEncode(searchQuery)
-            local res, err = safeGet(url)
-            if not res then
-                searchSection:CreateLabel("⚠️ Search failed: "..tostring(err))
-                return
-            end
-            local ok, data = pcall(function() return HttpService:JSONDecode(res) end)
-            if not ok or not data or not data.result or not data.result.scripts then
-                searchSection:CreateLabel("⚠️ Unexpected search response")
-                return
-            end
-            for _, script in ipairs(data.result.scripts) do
-                local title = script.title or "Untitled"
-                local gameName = (script.game and script.game.name) and ("[" .. script.game.name .. "]") or ""
-                searchSection:CreateLabel(title .. " " .. gameName)
-
-                searchSection:CreateButton({
-                    Name = "Execute "..title,
-                    Callback = function()
-                        if not script.script then
-                            Rayfield:Notify({Title="Execute", Content="No script content available.", Duration=2})
-                            return
-                        end
-                        local ok2, err2 = pcall(function()
-                            local fn = loadstring(script.script)
-                            if fn then fn() end
-                        end)
-                        if not ok2 then warn("ScriptBlox search execute error:", err2) end
-                    end
-                })
-                searchSection:CreateButton({
-                    Name = "Save "..title,
-                    Callback = function()
-                        if not script.script then
-                            Rayfield:Notify({Title="Save", Content="No script content available.", Duration=2})
-                            return
-                        end
-                        ensureFolder("ExperienceGui")
-                        local filename = sanitizeFilename(title)
-                        local path = "ExperienceGui/" .. filename .. ".lua"
-                        local okw, errw = pcall(function() writefile(path, script.script) end)
-                        if okw then
-                            Rayfield:Notify({Title="Saved", Content=title.." saved.", Duration=2})
-                        else
-                            Rayfield:Notify({Title="Save Failed", Content=tostring(errw), Duration=2})
-                        end
-                    end
-                })
-            end
-            -- Clear search input after showing results
-            searchQuery = ""
-            pcall(function() SBTab.Elements["Search Query"].element.InputFrame.InputBox.Text = "" end)
-        end
-    })
-
-    -- Load initial ScriptBlox lists (deferred so UI finishes loading)
-    task.defer(function()
-        pcall(fetchTrending)
-        pcall(fetchLatest)
-    end)
-
-    -- News tab (kept last)
     local AnnTab = Window:CreateTab("News", 4483362458)
 
     -- Version from config
     local version = "Unknown"
-    do
-        local ok, result = pcall(function()
-            return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json")
+    local ok, result = pcall(function()
+        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json")
+    end)
+    if ok then
+        local decodeOk, decoded = pcall(function()
+            return HttpService:JSONDecode(result)
         end)
-        if ok then
-            local decodeOk, decoded = pcall(function()
-                return HttpService:JSONDecode(result)
-            end)
-            if decodeOk and decoded.version then
-                version = decoded.version
-            end
+        if decodeOk and decoded.version then
+            version = decoded.version
         end
     end
 
@@ -371,9 +126,7 @@ local function StartExperienceGui()
         CurrentValue = 16,
         Flag = "WalkSpeed",
         Callback = function(Value)
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                LocalPlayer.Character.Humanoid.WalkSpeed = Value
-            end
+            LocalPlayer.Character.Humanoid.WalkSpeed = Value
         end,
     })
 
@@ -385,80 +138,24 @@ local function StartExperienceGui()
         CurrentValue = 50,
         Flag = "JumpPower",
         Callback = function(Value)
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                LocalPlayer.Character.Humanoid.JumpPower = Value
-            end
+            LocalPlayer.Character.Humanoid.JumpPower = Value
         end,
     })
 
     NeedsTab:CreateButton({
         Name = "Enable Fly",
         Callback = function()
-            local ok, err = pcall(function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
-            end)
-            if not ok then warn("Fly load failed:", err) end
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
         end,
     })
 
     -- Autorun
     task.defer(function()
-        pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
-        end)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
     end)
 
-    -- Script Library: show saved scripts first + remote Scripts.txt list
-    local function RefreshScriptLibrary()
-        -- Clear (Rayfield doesn't have a standard clear API; we'll just add a header)
-        ScriptsTab:CreateLabel("Saved Scripts (local):")
-        -- List local saved scripts
-        if type(listfiles) == "function" then
-            local ok, files = pcall(function() return listfiles("ExperienceGui") end)
-            if ok and type(files) == "table" and #files > 0 then
-                for _, filepath in ipairs(files) do
-                    if filepath:sub(-4) == ".lua" then
-                        local name = filepath:match("ExperienceGui/(.+)%.lua") or filepath
-                        ScriptsTab:CreateLabel("• " .. name)
-                        ScriptsTab:CreateButton({
-                            Name = "Run "..name,
-                            Callback = function()
-                                local okr, content = pcall(function() return readfile(filepath) end)
-                                if okr and content then
-                                    local ok2, err2 = pcall(function()
-                                        local fn = loadstring(content)
-                                        if fn then fn() end
-                                    end)
-                                    if not ok2 then warn("Saved script run error:", err2) end
-                                else
-                                    Rayfield:Notify({Title="Run", Content="Failed to read file.", Duration=2})
-                                end
-                            end
-                        })
-                        ScriptsTab:CreateButton({
-                            Name = "Delete "..name,
-                            Callback = function()
-                                local okd, errd = pcall(function() return delfile(filepath) end)
-                                if okd then
-                                    Rayfield:Notify({Title="Deleted", Content=name.." removed.", Duration=2})
-                                else
-                                    Rayfield:Notify({Title="Delete Failed", Content=tostring(errd), Duration=2})
-                                end
-                            end
-                        })
-                    end
-                end
-            else
-                ScriptsTab:CreateLabel("No saved scripts found.")
-            end
-        else
-            ScriptsTab:CreateLabel("File API not available in this environment.")
-        end
-
-        ScriptsTab:CreateLabel("") -- spacer
-        ScriptsTab:CreateLabel("Remote Scripts (from Scripts.txt):")
-
-        -- Fetch remote Scripts.txt
+    -- Script Library
+    local function LoadScriptLibrary()
         local success, result = pcall(function()
             return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.txt", true)
         end)
@@ -468,6 +165,7 @@ local function StartExperienceGui()
             return
         end
 
+        local scripts
         local decodeSuccess, decodeResult = pcall(function()
             return HttpService:JSONDecode(result)
         end)
@@ -477,65 +175,36 @@ local function StartExperienceGui()
             return
         end
 
-        local scripts = decodeResult
+        scripts = decodeResult
         if type(scripts) ~= "table" or #scripts == 0 then
-            ScriptsTab:CreateLabel("⚠️ No remote scripts found")
+            ScriptsTab:CreateLabel("⚠️ No scripts found")
             return
         end
 
         for _, scriptData in ipairs(scripts) do
-            local name = scriptData.name or "Unnamed Script"
-            ScriptsTab:CreateLabel(name)
             ScriptsTab:CreateButton({
-                Name = "Run "..name,
+                Name = scriptData.name or "Unnamed Script",
                 Callback = function()
                     if scriptData.url then
                         local ok, err = pcall(function()
                             loadstring(game:HttpGet(scriptData.url, true))()
                         end)
-                        if not ok then warn("Failed to load script:", name, err) end
+                        if not ok then warn("Failed to load script:", scriptData.name, err) end
                     elseif scriptData.code then
                         local ok, err = pcall(function()
                             loadstring(scriptData.code)()
                         end)
-                        if not ok then warn("Failed to execute script:", name, err) end
+                        if not ok then warn("Failed to execute script:", scriptData.name, err) end
                     else
-                        warn("No url or code found for script:", name)
-                    end
-                end
-            })
-            ScriptsTab:CreateButton({
-                Name = "Save "..name,
-                Callback = function()
-                    -- fetch code if url
-                    local code = nil
-                    if scriptData.url then
-                        local ok, res = pcall(function() return game:HttpGet(scriptData.url, true) end)
-                        if ok then code = res end
-                    elseif scriptData.code then
-                        code = scriptData.code
-                    end
-                    if not code then
-                        Rayfield:Notify({Title="Save", Content="Failed to retrieve script code.", Duration=2})
-                        return
-                    end
-                    ensureFolder("ExperienceGui")
-                    local filename = sanitizeFilename(name)
-                    local path = "ExperienceGui/" .. filename .. ".lua"
-                    local okw, errw = pcall(function() writefile(path, code) end)
-                    if okw then
-                        Rayfield:Notify({Title="Saved", Content=name.." saved.", Duration=2})
-                    else
-                        Rayfield:Notify({Title="Save Failed", Content=tostring(errw), Duration=2})
+                        warn("No url or code found for script:", scriptData.name)
                     end
                 end
             })
         end
     end
-
     task.defer(function()
         task.wait(1)
-        pcall(RefreshScriptLibrary)
+        pcall(LoadScriptLibrary)
     end)
 
     -- Announcements
@@ -544,7 +213,7 @@ local function StartExperienceGui()
 
     local function ClearOldLabels()
         for _, label in ipairs(announcementLabels) do
-            pcall(function() label:Set("Text", "") end)
+            label:Set("Text", "")
         end
         announcementLabels = {}
     end
@@ -585,7 +254,7 @@ local function StartExperienceGui()
     end
     task.defer(function()
         while true do
-            pcall(LoadAnnouncements)
+            LoadAnnouncements()
             task.wait(60)
         end
     end)
