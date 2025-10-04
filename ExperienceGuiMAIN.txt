@@ -95,8 +95,6 @@ local function StartExperienceGui()
         end,
     })
 
-    local AnnTab = Window:CreateTab("News", 4483362458)
-
     -- Version from config
     local version = "Unknown"
     local ok, result = pcall(function()
@@ -207,7 +205,124 @@ local function StartExperienceGui()
         pcall(LoadScriptLibrary)
     end)
 
-    -- Announcements
+    -- SCRIPTBLOX + SAVED TABS (inserted before announcements)
+    local ScriptBloxTab = Window:CreateTab("ScriptBlox Library", 4483362458)
+    local SavedTab = Window:CreateTab("Saved Scripts", 4483362458)
+
+    local savedScripts = {}
+    local savedFile = "ExperienceGui/SavedScripts.json"
+
+    local function LoadSavedScripts()
+        local ok, content = pcall(function()
+            return readfile and readfile(savedFile)
+        end)
+        if ok and content and content ~= "" then
+            local success, data = pcall(function()
+                return HttpService:JSONDecode(content)
+            end)
+            if success and type(data) == "table" then
+                savedScripts = data
+            end
+        end
+    end
+
+    local function SaveScripts()
+        if writefile then
+            local ok, json = pcall(function()
+                return HttpService:JSONEncode(savedScripts)
+            end)
+            if ok then
+                writefile(savedFile, json)
+            end
+        end
+    end
+
+    local function RefreshSavedTab()
+        SavedTab:ClearElements()
+        if #savedScripts == 0 then
+            SavedTab:CreateLabel("⚠️ No saved scripts yet")
+            return
+        end
+
+        for _, scriptData in ipairs(savedScripts) do
+            SavedTab:CreateButton({
+                Name = scriptData.title or "Unnamed Script",
+                Callback = function()
+                    local ok, err = pcall(function()
+                        loadstring(game:HttpGet(scriptData.scriptUrl))()
+                    end)
+                    if not ok then
+                        warn("Failed to run saved script:", scriptData.title, err)
+                    end
+                end,
+            })
+        end
+    end
+
+    LoadSavedScripts()
+    RefreshSavedTab()
+
+    local function LoadScriptBloxLibrary()
+        local apiUrl = "https://scriptblox.com/api/script"
+        local success, result = pcall(function()
+            return game:HttpGet(apiUrl)
+        end)
+        if not success then
+            ScriptBloxTab:CreateLabel("⚠️ Failed to reach ScriptBlox API")
+            warn("HTTP GET failed:", result)
+            return
+        end
+
+        local decodeSuccess, data = pcall(function()
+            return HttpService:JSONDecode(result)
+        end)
+        if not decodeSuccess or not data or not data.result then
+            ScriptBloxTab:CreateLabel("⚠️ Invalid ScriptBlox API response")
+            warn("Failed to decode ScriptBlox response:", data)
+            return
+        end
+
+        local scripts = data.result.scripts or {}
+        if #scripts == 0 then
+            ScriptBloxTab:CreateLabel("⚠️ No scripts available from ScriptBlox")
+            return
+        end
+
+        for _, scriptInfo in ipairs(scripts) do
+            ScriptBloxTab:CreateButton({
+                Name = scriptInfo.title or "Unnamed Script",
+                Callback = function()
+                    if scriptInfo.scriptUrl then
+                        local ok, err = pcall(function()
+                            local scriptText = game:HttpGet(scriptInfo.scriptUrl)
+                            loadstring(scriptText)()
+                        end)
+                        if not ok then
+                            warn("Failed to execute ScriptBlox script:", scriptInfo.title, err)
+                        end
+
+                        -- Save for later
+                        table.insert(savedScripts, {
+                            title = scriptInfo.title,
+                            scriptUrl = scriptInfo.scriptUrl
+                        })
+                        SaveScripts()
+                        RefreshSavedTab()
+                    else
+                        warn("No URL found for:", scriptInfo.title)
+                    end
+                end,
+            })
+        end
+    end
+
+    task.defer(function()
+        task.wait(1)
+        pcall(LoadScriptBloxLibrary)
+    end)
+
+    -- Announcements tab (kept at the end)
+    local AnnTab = Window:CreateTab("News", 4483362458)
     local announcementsUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/announcementsChangelogs.json"
     local announcementLabels = {}
 
@@ -263,5 +378,4 @@ local function StartExperienceGui()
     return Window
 end
 
--- Call function and return for loader
 return StartExperienceGui()
