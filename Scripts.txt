@@ -32,7 +32,12 @@
     "url": "https://pastebin.com/raw/5PqzEXBQ"
   },
   {
+    "name": "random stuff i found",
+    "url": "https://pastefy.app/2tC7nRAK/raw"
+  },
+  {
     "name": "Rejoin",
     "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/rejoin.txt"
   }
 ]
+
