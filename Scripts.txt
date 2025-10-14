@@ -32,8 +32,8 @@
     "url": "https://pastebin.com/raw/5PqzEXBQ"
   },
   {
-    "name": "random stuff i found",
-    "url": "https://pastefy.app/2tC7nRAK/raw"
+    "name": "Zero Gravity",
+    "url": "loadstring(game:HttpGet("https://raw.githubusercontent.com/Bac0nHck/Scripts/refs/heads/main/zerogravity"))()"
   },
   {
     "name": "Rejoin",
