@@ -33,7 +33,11 @@
   },
   {
     "name": "Zero Gravity",
-    "url": "loadstring(game:HttpGet("https://raw.githubusercontent.com/Bac0nHck/Scripts/refs/heads/main/zerogravity"))()"
+    "url": "https://raw.githubusercontent.com/Bac0nHck/Scripts/refs/heads/main/zerogravity"
+  },
+  {
+    "name": "ExperienceF3X (Beta)",
+    "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceF3X.lua"
   },
   {
     "name": "Rejoin",
