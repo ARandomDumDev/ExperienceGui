@@ -1,5 +1,5 @@
 -- ExperienceF3X GUI
--- By: [Your Name]
+-- made by CoolDownExperience
 -- Version: 1.0
 
 local ExperienceF3X = {}
