@@ -20,8 +20,8 @@
     "url": "https://raw.githubusercontent.com/Emerson2-creator/Scripts-Roblox/refs/heads/main/animationsHubV3.lua"
   },
   {
-    "name": "Fling Things And People",
-    "url": "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/FTAP.txt"
+    "name": "Destruction Simulator (supa op)",
+    "url": "https://rawscripts.net/raw/andx1F4A5-Destruction-Simulator-OP-Explode-Everything-And-More-15926"
   },
   {
     "name": "Break in 2",
