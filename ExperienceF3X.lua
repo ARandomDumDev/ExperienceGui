@@ -1,6 +1,6 @@
 -- ExperienceF3X GUI
--- By: Cooldownexperience
--- Version: 2.0
+-- By: [Your Name]
+-- Version: 1.0
 
 local ExperienceF3X = {}
 
@@ -151,65 +151,67 @@ ToggleStroke.Color = Color3.fromRGB(255, 255, 255)
 ToggleStroke.Thickness = 2
 ToggleStroke.Parent = ToggleButton
 
--- Define ALL tools including destructive commands
+-- Music Player
+local MusicPlayer = Instance.new("Frame")
+MusicPlayer.Name = "musicPlayer"
+MusicPlayer.Size = UDim2.new(0, 200, 0, 80)
+MusicPlayer.Position = UDim2.new(0, 20, 0, 90)
+MusicPlayer.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+MusicPlayer.BackgroundTransparency = 0.1
+MusicPlayer.Visible = false
+MusicPlayer.Parent = ScreenGui
+
+local MusicCorner = Instance.new("UICorner")
+MusicCorner.CornerRadius = UDim.new(0, 8)
+MusicCorner.Parent = MusicPlayer
+
+local MusicStroke = Instance.new("UIStroke")
+MusicStroke.Color = Color3.fromRGB(0, 100, 255)
+MusicStroke.Thickness = 2
+MusicStroke.Parent = MusicPlayer
+
+local PlayButton = Instance.new("TextButton")
+PlayButton.Name = "play"
+PlayButton.Size = UDim2.new(0, 60, 0, 30)
+PlayButton.Position = UDim2.new(0.1, 0, 0.3, 0)
+PlayButton.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+PlayButton.Text = "Play"
+PlayButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+PlayButton.TextSize = 14
+PlayButton.Font = Enum.Font.Gotham
+PlayButton.Parent = MusicPlayer
+
+local StopButton = Instance.new("TextButton")
+StopButton.Name = "stop"
+StopButton.Size = UDim2.new(0, 60, 0, 30)
+StopButton.Position = UDim2.new(0.55, 0, 0.3, 0)
+StopButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+StopButton.Text = "Stop"
+StopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+StopButton.TextSize = 14
+StopButton.Font = Enum.Font.Gotham
+StopButton.Parent = MusicPlayer
+
+-- Define tools (only music and visual tools that work)
 local Tools = {
-    Destruction = {
-        {Name = "Delete All", Function = function() DeleteAll() end},
-        {Name = "Kill All", Function = function() KillAll() end},
-        {Name = "Clear Map", Function = function() ClearMap() end},
-        {Name = "Unanchor All", Function = function() UnanchorAll() end},
-        {Name = "Remove Spawns", Function = function() RemoveSpawns() end},
-        {Name = "Break Tools", Function = function() BreakTools() end},
-        {Name = "Destroy GUI", Function = function() DestroyGUI() end},
-        {Name = "Wipe Baseplate", Function = function() WipeBaseplate() end}
-    },
-    Building = {
-        {Name = "BTools", Function = function() GiveBTools() end},
-        {Name = "F3X Tools", Function = function() GiveF3X() end},
-        {Name = "Build Tools", Function = function() GiveBuildTools() end},
-        {Name = "Material Tool", Function = function() GiveMaterialTool() end},
-        {Name = "Clone Tool", Function = function() GiveCloneTool() end},
-        {Name = "Delete Tool", Function = function() GiveDeleteTool() end}
-    },
-    Admin = {
-        {Name = "Kick All", Function = function() KickAll() end},
-        {Name = "Ban All", Function = function() BanAll() end},
-        {Name = "Shutdown", Function = function() ShutdownServer() end},
-        {Name = "Freeze All", Function = function() FreezeAll() end},
-        {Name = "Thaw All", Function = function() ThawAll() end},
-        {Name = "God Mode", Function = function() GodMode() end},
-        {Name = "Invisible", Function = function() Invisible() end},
-        {Name = "Fly", Function = function() Fly() end},
-        {Name = "Speed", Function = function() Speed() end},
-        {Name = "Jump", Function = function() HighJump() end}
-    },
-    Fun = {
-        {Name = "Sky Changer", Function = function() ChangeSkybox() end},
-        {Name = "666 Mode", Function = function() SixSixSixMode() end},
-        {Name = "Decal Spam", Function = function() DecalSpam() end},
-        {Name = "Random Colors", Function = function() RandomColors() end},
-        {Name = "Sparkles", Function = function() AddSparkles() end},
-        {Name = "Baseplate", Function = function() CreateBaseplate() end},
-        {Name = "Spawn Parts", Function = function() SpawnParts() end},
-        {Name = "Rain Parts", Function = function() RainParts() end},
-        {Name = "Create Realm", Function = function() CreateRealm() end},
-        {Name = "Random Meshes", Function = function() RandomMeshes() end},
-        {Name = "Black White", Function = function() BlackWhite() end},
-        {Name = "Grass Block", Function = function() GrassBlock() end},
-        {Name = "Change Material", Function = function() ChangeMaterial() end}
-    },
     Music = {
         {Name = "Play Music", Function = function() PlayBackgroundMusic() end},
         {Name = "Stop Music", Function = function() StopBackgroundMusic() end},
         {Name = "Sound Effects", Function = function() PlaySoundEffect() end}
     },
-    Tools = {
-        {Name = "Eraser Tool", Function = function() CreateEraser() end},
-        {Name = "Draw Tool", Function = function() CreateDrawTool() end},
-        {Name = "Stoneify Tool", Function = function() CreateStoneify() end},
-        {Name = "John Doe Trail", Function = function() CreateTrail() end},
-        {Name = "Money Bag", Function = function() CreateMoneyBag() end},
-        {Name = "Thomas Train", Function = function() CreateTrain() end}
+    Visual = {
+        {Name = "Change Sky", Function = function() ChangeSkybox() end},
+        {Name = "Color Parts", Function = function() ColorParts() end},
+        {Name = "Add Sparkles", Function = function() AddSparklesVisual() end},
+        {Name = "Rainbow Effect", Function = function() RainbowEffect() end},
+        {Name = "Create Base", Function = function() CreateBaseVisual() end},
+        {Name = "Spawn Blocks", Function = function() SpawnBlocks() end}
+    },
+    Fun = {
+        {Name = "Dance Party", Function = function() DanceParty() end},
+        {Name = "Light Show", Function = function() LightShow() end},
+        {Name = "Fireworks", Function = function() Fireworks() end},
+        {Name = "Floating Text", Function = function() FloatingText() end}
     }
 }
 
@@ -313,7 +315,7 @@ SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
             -- Hide category labels if all tools in category are hidden
             local categoryToolsVisible = false
             for _, toolChild in pairs(ToolsContainer:GetChildren()) do
-                if toolChild:IsA("TextButton") and toolChild.Visible and toolChild.Parent == ToolsContainer then
+                if toolChild:IsA("TextButton") and toolChild.Visible then
                     categoryToolsVisible = true
                     break
                 end
@@ -379,6 +381,9 @@ function PlayBackgroundMusic()
     backgroundMusic.Volume = 0.5
     backgroundMusic.Parent = game.Workspace
     backgroundMusic:Play()
+    
+    -- Show music player
+    MusicPlayer.Visible = true
 end
 
 function StopBackgroundMusic()
@@ -386,259 +391,18 @@ function StopBackgroundMusic()
         backgroundMusic:Stop()
         backgroundMusic = nil
     end
+    MusicPlayer.Visible = false
 end
 
 function PlaySoundEffect()
     PlaySound()
 end
 
--- DESTRUCTIVE COMMANDS (Fixed)
-function DeleteAll()
-    for _, obj in pairs(workspace:GetChildren()) do
-        if obj:IsA("BasePart") and obj ~= workspace.Terrain then
-            obj:Destroy()
-        end
-    end
-    PlaySound()
-end
-
-function KillAll()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer and player.Character then
-            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.Health = 0
-            end
-        end
-    end
-    PlaySound()
-end
-
-function ClearMap()
-    for _, obj in pairs(workspace:GetChildren()) do
-        if obj ~= game.Players.LocalPlayer.Character then
-            obj:Destroy()
-        end
-    end
-    PlaySound()
-end
-
-function UnanchorAll()
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") then
-            obj.Anchored = false
-        end
-    end
-    PlaySound()
-end
-
-function RemoveSpawns()
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("SpawnLocation") then
-            obj:Destroy()
-        end
-    end
-    PlaySound()
-end
-
-function BreakTools()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            player.Backpack:ClearAllChildren()
-            if player.Character then
-                for _, tool in pairs(player.Character:GetChildren()) do
-                    if tool:IsA("Tool") then
-                        tool:Destroy()
-                    end
-                end
-            end
-        end
-    end
-    PlaySound()
-end
-
-function DestroyGUI()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            local playerGui = player:FindFirstChild("PlayerGui")
-            if playerGui then
-                playerGui:ClearAllChildren()
-            end
-        end
-    end
-    PlaySound()
-end
-
-function WipeBaseplate()
-    local terrain = workspace:FindFirstChildOfClass("Terrain")
-    if terrain then
-        workspace.Terrain:Clear()
-    end
-    PlaySound()
-end
-
--- BUILDING TOOLS (Fixed)
-function GiveBTools()
-    local tools = {"Hammer", "Clone", "Grab"}
-    for _, toolName in pairs(tools) do
-        local tool = Instance.new("Tool")
-        tool.Name = toolName
-        tool.RequiresHandle = false
-        tool.Parent = game.Players.LocalPlayer.Backpack
-    end
-    PlaySound()
-end
-
-function GiveF3X()
-    -- This would require the actual F3X model, but we can create basic building tools
-    local f3x = Instance.new("Tool")
-    f3x.Name = "F3X"
-    f3x.RequiresHandle = false
-    f3x.Parent = game.Players.LocalPlayer.Backpack
-    PlaySound()
-end
-
-function GiveBuildTools()
-    GiveBTools()
-    PlaySound()
-end
-
-function GiveMaterialTool()
-    local tool = Instance.new("Tool")
-    tool.Name = "Material"
-    tool.RequiresHandle = false
-    tool.Parent = game.Players.LocalPlayer.Backpack
-    PlaySound()
-end
-
-function GiveCloneTool()
-    local tool = Instance.new("Tool")
-    tool.Name = "Clone"
-    tool.RequiresHandle = false
-    tool.Parent = game.Players.LocalPlayer.Backpack
-    PlaySound()
-end
-
-function GiveDeleteTool()
-    local tool = Instance.new("Tool")
-    tool.Name = "Delete"
-    tool.RequiresHandle = false
-    tool.Parent = game.Players.LocalPlayer.Backpack
-    PlaySound()
-end
-
--- ADMIN COMMANDS (Fixed)
-function KickAll()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            player:Kick("Kicked by ExperienceF3X")
-        end
-    end
-    PlaySound()
-end
-
-function BanAll()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            -- Ban implementation would vary by game
-            player:Kick("Banned by ExperienceF3X")
-        end
-    end
-    PlaySound()
-end
-
-function ShutdownServer()
-    game:GetService("TeleportService"):Teleport(game.PlaceId)
-    PlaySound()
-end
-
-function FreezeAll()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer and player.Character then
-            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.PlatformStand = true
-            end
-        end
-    end
-    PlaySound()
-end
-
-function ThawAll()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player.Character then
-            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.PlatformStand = false
-            end
-        end
-    end
-    PlaySound()
-end
-
-function GodMode()
-    local character = game.Players.LocalPlayer.Character
-    if character then
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid.MaxHealth = math.huge
-            humanoid.Health = math.huge
-        end
-    end
-    PlaySound()
-end
-
-function Invisible()
-    local character = game.Players.LocalPlayer.Character
-    if character then
-        for _, part in pairs(character:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.Transparency = 1
-            end
-        end
-    end
-    PlaySound()
-end
-
-function Fly()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoid = character:WaitForChild("Humanoid")
-    
-    humanoid.PlatformStand = true
-    local bodyGyro = Instance.new("BodyGyro")
-    bodyGyro.Parent = character.HumanoidRootPart
-    local bodyVelocity = Instance.new("BodyVelocity")
-    bodyVelocity.Parent = character.HumanoidRootPart
-    bodyVelocity.MaxForce = Vector3.new(40000, 40000, 40000)
-    
-    PlaySound()
-end
-
-function Speed()
-    local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        humanoid.WalkSpeed = 100
-    end
-    PlaySound()
-end
-
-function HighJump()
-    local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        humanoid.JumpPower = 200
-    end
-    PlaySound()
-end
-
--- FUN/VISUAL COMMANDS (Fixed)
+-- Visual effects that actually work
 function ChangeSkybox()
     local lighting = game:GetService("Lighting")
-    for _, child in pairs(lighting:GetChildren()) do
-        if child:IsA("Sky") then
-            child:Destroy()
-        end
-    end
+    
+    -- Create a basic skybox using your image
     local sky = Instance.new("Sky")
     sky.SkyboxBk = "rbxassetid://72963082476059"
     sky.SkyboxDn = "rbxassetid://72963082476059"
@@ -646,47 +410,19 @@ function ChangeSkybox()
     sky.SkyboxLf = "rbxassetid://72963082476059"
     sky.SkyboxRt = "rbxassetid://72963082476059"
     sky.SkyboxUp = "rbxassetid://72963082476059"
+    
+    -- Clear existing sky
+    for _, child in pairs(lighting:GetChildren()) do
+        if child:IsA("Sky") then
+            child:Destroy()
+        end
+    end
+    
     sky.Parent = lighting
     PlaySound()
 end
 
-function SixSixSixMode()
-    -- Apply dark theme with red accents
-    local lighting = game:GetService("Lighting")
-    lighting.Ambient = Color3.new(0.1, 0, 0)
-    lighting.Brightness = 2
-    lighting.FogColor = Color3.new(0.2, 0, 0)
-    lighting.FogEnd = 500
-    
-    -- Add red lighting to all parts
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Color = Color3.new(0.3, 0, 0)
-            local pointLight = Instance.new("PointLight")
-            pointLight.Color = Color3.new(1, 0, 0)
-            pointLight.Brightness = 5
-            pointLight.Range = 20
-            pointLight.Parent = part
-        end
-    end
-    PlaySound()
-end
-
-function DecalSpam()
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") then
-            for _, face in pairs(Enum.NormalId:GetEnumItems()) do
-                local decal = Instance.new("Decal")
-                decal.Face = face
-                decal.Texture = "rbxassetid://72963082476059"
-                decal.Parent = part
-            end
-        end
-    end
-    PlaySound()
-end
-
-function RandomColors()
+function ColorParts()
     for _, part in pairs(workspace:GetDescendants()) do
         if part:IsA("BasePart") then
             part.BrickColor = BrickColor.random()
@@ -695,165 +431,132 @@ function RandomColors()
     PlaySound()
 end
 
-function AddSparkles()
+function AddSparklesVisual()
     for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") then
+        if part:IsA("BasePart") and not part:FindFirstChild("Sparkles") then
             local sparkles = Instance.new("Sparkles")
-            sparkles.SparkleColor = Color3.new(0, 1, 1)
             sparkles.Parent = part
         end
     end
     PlaySound()
 end
 
-function CreateBaseplate()
-    local base = Instance.new("Part")
-    base.Name = "Baseplate"
-    base.Size = Vector3.new(512, 10, 512)
-    base.Position = Vector3.new(0, 0, 0)
-    base.Anchored = true
-    base.BrickColor = BrickColor.new("Bright blue")
-    base.Material = Enum.Material.Grass
-    base.Parent = workspace
-    PlaySound()
-end
-
-function SpawnParts()
-    for i = 1, 50 do
-        local part = Instance.new("Part")
-        part.Size = Vector3.new(4, 4, 4)
-        part.Position = Vector3.new(math.random(-50, 50), 10, math.random(-50, 50))
-        part.BrickColor = BrickColor.random()
-        part.Anchored = false
-        part.Parent = workspace
-    end
-    PlaySound()
-end
-
-function RainParts()
+function RainbowEffect()
     spawn(function()
-        for i = 1, 100 do
-            local part = Instance.new("Part")
-            part.Size = Vector3.new(2, 2, 2)
-            part.Position = Vector3.new(math.random(-100, 100), 100, math.random(-100, 100))
-            part.BrickColor = BrickColor.random()
-            part.Anchored = false
-            part.Parent = workspace
-            task.wait(0.1)
+        while task.wait(0.1) do
+            for _, part in pairs(workspace:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                end
+            end
         end
     end)
     PlaySound()
 end
 
-function CreateRealm()
+function CreateBaseVisual()
     local base = Instance.new("Part")
-    base.Size = Vector3.new(200, 5, 200)
-    base.Position = Vector3.new(0, 1000, 0)
+    base.Size = Vector3.new(100, 5, 100)
+    base.Position = Vector3.new(0, 0, 0)
     base.Anchored = true
-    base.BrickColor = BrickColor.new("Bright green")
+    base.BrickColor = BrickColor.new("Bright blue")
     base.Parent = workspace
+    PlaySound()
+end
+
+function SpawnBlocks()
+    for i = 1, 10 do
+        local block = Instance.new("Part")
+        block.Size = Vector3.new(4, 4, 4)
+        block.Position = Vector3.new(math.random(-20, 20), 10, math.random(-20, 20))
+        block.BrickColor = BrickColor.random()
+        block.Parent = workspace
+    end
+    PlaySound()
+end
+
+function DanceParty()
+    -- Simple dance party with colored lights
+    local lighting = game:GetService("Lighting")
     
-    local spawn = Instance.new("SpawnLocation")
-    spawn.Size = Vector3.new(10, 5, 10)
-    spawn.Position = Vector3.new(0, 1005, 0)
-    spawn.Anchored = true
-    spawn.Parent = workspace
-    PlaySound()
-end
-
-function RandomMeshes()
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("Part") then
-            local mesh = Instance.new("SpecialMesh")
-            mesh.Parent = part
-            mesh.MeshType = Enum.MeshType[{"Brick", "Cylinder", "Sphere", "Wedge"}[math.random(1,4)]]
+    spawn(function()
+        while task.wait(0.5) do
+            lighting.Ambient = Color3.new(math.random(), math.random(), math.random())
+            lighting.Brightness = math.random(1, 3)
         end
+    end)
+    PlaySound()
+end
+
+function LightShow()
+    for i = 1, 20 do
+        local light = Instance.new("PointLight")
+        light.Brightness = 5
+        light.Range = 20
+        light.Color = Color3.new(math.random(), math.random(), math.random())
+        
+        local part = Instance.new("Part")
+        part.Size = Vector3.new(1, 1, 1)
+        part.Position = Vector3.new(math.random(-30, 30), math.random(5, 20), math.random(-30, 30))
+        part.Anchored = true
+        part.CanCollide = false
+        part.Material = Enum.Material.Neon
+        light.Parent = part
+        part.Parent = workspace
     end
     PlaySound()
 end
 
-function BlackWhite()
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") then
-            local gray = math.random()
-            part.Color = Color3.new(gray, gray, gray)
-        end
+function Fireworks()
+    for i = 1, 15 do
+        spawn(function()
+            local firework = Instance.new("Part")
+            firework.Size = Vector3.new(1, 1, 1)
+            firework.Position = Vector3.new(math.random(-20, 20), 0, math.random(-20, 20))
+            firework.Anchored = false
+            firework.BrickColor = BrickColor.random()
+            firework.Parent = workspace
+            
+            local bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.Velocity = Vector3.new(0, 50, 0)
+            bodyVelocity.Parent = firework
+            
+            game:GetService("Debris"):AddItem(firework, 3)
+        end)
     end
     PlaySound()
 end
 
-function GrassBlock()
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("Part") then
-            part.Material = Enum.Material.Grass
-            part.BrickColor = BrickColor.new("Bright green")
-        end
-    end
+function FloatingText()
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = "ExperienceF3X!"
+    textLabel.TextColor3 = Color3.new(0, 1, 1)
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.Parent = billboard
+    
+    billboard.Parent = game.Players.LocalPlayer.Character.Head
     PlaySound()
 end
 
-function ChangeMaterial()
-    local materials = {"Plastic", "Wood", "Slate", "Concrete", "CorrodedMetal", "DiamondPlate", "Foil", "Grass"}
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("Part") then
-            part.Material = Enum.Material[materials[math.random(1, #materials)]]
-        end
-    end
-    PlaySound()
-end
+-- Music player controls
+PlayButton.MouseButton1Click:Connect(function()
+    PlayBackgroundMusic()
+end)
 
--- TOOL FUNCTIONS (Fixed)
-function CreateEraser()
-    local tool = Instance.new("Tool")
-    tool.Name = "Eraser"
-    tool.RequiresHandle = false
-    tool.Parent = game.Players.LocalPlayer.Backpack
-    PlaySound()
-end
-
-function CreateDrawTool()
-    local tool = Instance.new("Tool")
-    tool.Name = "Draw"
-    tool.RequiresHandle = false
-    tool.Parent = game.Players.LocalPlayer.Backpack
-    PlaySound()
-end
-
-function CreateStoneify()
-    local tool = Instance.new("Tool")
-    tool.Name = "Stoneify"
-    tool.RequiresHandle = false
-    tool.Parent = game.Players.LocalPlayer.Backpack
-    PlaySound()
-end
-
-function CreateTrail()
-    local character = game.Players.LocalPlayer.Character
-    if character then
-        local trail = Instance.new("Trail")
-        trail.Parent = character.HumanoidRootPart
-    end
-    PlaySound()
-end
-
-function CreateMoneyBag()
-    local tool = Instance.new("Tool")
-    tool.Name = "MoneyBag"
-    tool.RequiresHandle = false
-    tool.Parent = game.Players.LocalPlayer.Backpack
-    PlaySound()
-end
-
-function CreateTrain()
-    local tool = Instance.new("Tool")
-    tool.Name = "ThomasTrain"
-    tool.RequiresHandle = false
-    tool.Parent = game.Players.LocalPlayer.Backpack
-    PlaySound()
-end
+StopButton.MouseButton1Click:Connect(function()
+    StopBackgroundMusic()
+end)
 
 -- Initialize the GUI
 CreateToolButtons()
 MakeDraggable(MainFrame, Header)
+MakeDraggable(MusicPlayer, MusicPlayer)
 
 return ExperienceF3X
