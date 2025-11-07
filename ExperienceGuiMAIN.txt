@@ -1,4 +1,4 @@
--- experienceguimain | Version 3.0.2 | MY MINATURE CARBONATED FLAVORED WATER
+-- experienceguimain | Version 3.0.3 | patch
 
 local function StartExperienceGui()
     local HttpService = game:GetService("HttpService")
