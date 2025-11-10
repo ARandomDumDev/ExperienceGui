@@ -1,0 +1,105 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  height: 100vh;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hidden {
+  display: none;
+}
+
+.password-container {
+  text-align: center;
+}
+
+.password-box {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 40px;
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.password-box input {
+  padding: 10px;
+  margin-top: 10px;
+  width: 80%;
+  border: none;
+  border-radius: 5px;
+  text-align: center;
+  outline: none;
+}
+
+.password-box button {
+  margin-top: 15px;
+  padding: 10px 25px;
+  border: none;
+  border-radius: 5px;
+  background: #00adb5;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.password-box button:hover {
+  background: #06c0c7;
+}
+
+#error-message {
+  color: #ff6b6b;
+  margin-top: 10px;
+}
+
+.main-container {
+  text-align: center;
+  animation: fadeIn 1s ease-in;
+}
+
+.content h1 {
+  font-size: 3em;
+  letter-spacing: 2px;
+}
+
+.content h2 {
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.slogan {
+  margin-top: 15px;
+  font-size: 1.2em;
+  color: #ccc;
+}
+
+.download-btn {
+  margin-top: 40px;
+  padding: 15px 40px;
+  font-size: 1.1em;
+  background: #00adb5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.3s;
+}
+
+.download-btn:hover {
+  transform: scale(1.05);
+  background: #06c0c7;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
