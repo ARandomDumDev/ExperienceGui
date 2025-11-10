@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExperienceExecutor</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="password-container" id="password-container">
+    <div class="password-box">
+      <h2>Enter Access Code</h2>
+      <input type="password" id="password-input" placeholder="Password">
+      <button onclick="checkPassword()">Enter</button>
+      <p id="error-message"></p>
+    </div>
+  </div>
+
+  <div class="main-container hidden" id="main-container">
+    <div class="content">
+      <h1>ExperienceExecutor</h1>
+      <h2>ExperienceLoader</h2>
+      <h2>ExperienceGui</h2>
+      <p class="slogan">Experience without limits.</p>
+      <button class="download-btn" onclick="downloadApp()">Download</button>
+    </div>
+  </div>
+
+  <script>
+    function checkPassword() {
+      const input = document.getElementById("password-input").value;
+      const correct = "CoolDownExperience";
+      const error = document.getElementById("error-message");
+      if (input === correct) {
+        document.getElementById("password-container").classList.add("hidden");
+        document.getElementById("main-container").classList.remove("hidden");
+      } else {
+        error.textContent = "Incorrect password.";
+      }
+    }
+
+    function downloadApp() {
+      alert("Download starting... (placeholder)");
+    }
+  </script>
+</body>
+</html>
