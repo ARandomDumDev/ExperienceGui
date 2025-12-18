@@ -1,4 +1,13 @@
 {
-  "announcement": "hhgrge",
-  "changelog": "i think i fixed scriptblox"
+  "announcement": "Massive Patch!",
+  "changelog": "1. Added file system safety checks - Added hasFileFunctions and hasIsFile variables to handle different executors
+2. Enhanced authentication system - Changed SaveKey = true and added multiple valid keys for better UX
+3. Added character monitoring - Automatic reapplication of WalkSpeed/JumpPower on respawn
+4. Extended speed ranges - WalkSpeed up to 500, JumpPower up to 500
+5. Added new features - Hip Height slider and Noclip toggle
+6. Improved script executor - Better error messages and input clearing
+7. Enhanced favorites system - Proper file handling and duplicate prevention
+8. Better ScriptBlox integration - Multiple API endpoint fallbacks
+9. Improved UI organization - Added sections and better labels
+10. Auto-refresh news system - Updates every 5 minutes automatically"
 }
