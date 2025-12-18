@@ -276,7 +276,7 @@ local function StartExperienceGui()
         ScriptsTab:CreateLabel("📚 Loading scripts...")
         
         local success, result = pcall(function()
-            return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.txt", true)
+            return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.json", true)
         end)
         
         if not success then
