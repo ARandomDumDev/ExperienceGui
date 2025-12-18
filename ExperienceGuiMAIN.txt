@@ -1,11 +1,10 @@
--- ExperienceGui | MacLib Frontend | Full Functional Rewrite
+-- ExperienceGui | MacLib Frontend | FULL PATCHED REWRITE
 
 ------------------------
 -- SERVICES
 ------------------------
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 ------------------------
@@ -66,13 +65,24 @@ end
 ------------------------
 local Window = MacLib:Window({
     Title = "ExperienceGui",
-    Subtitle = "Made by CoolDown | Enhanced",
+    Subtitle = "Made by CoolDown | MacLib",
     Size = UDim2.fromOffset(900,680),
     DragStyle = 1,
     ShowUserInfo = true,
     Keybind = Enum.KeyCode.RightControl,
     AcrylicBlur = true
 })
+
+Window.Settings.Theme = {
+    Accent = Color3.fromRGB(85,160,255),
+    Background = Color3.fromRGB(12,15,22),
+    Secondary = Color3.fromRGB(18,22,32),
+    Text = Color3.fromRGB(240,240,240),
+    Muted = Color3.fromRGB(160,160,160),
+}
+
+Window:SetScale(1.07)
+Window:SetAcrylicBlurState(true)
 
 ------------------------
 -- AUTH DIALOG
@@ -82,16 +92,15 @@ if not authenticated then
         Title = "ExperienceGui Access",
         Description = "Enter Password",
         Inputs = {
-            {Name="Key", Placeholder="Enter key"}
+            { Name="Key", Placeholder="Enter key" }
         },
         Buttons = {
             {
                 Text = "Confirm",
                 Callback = function(data)
-                    local key = data.Key
-                    if VALID_KEYS[key] then
+                    if VALID_KEYS[data.Key] then
                         authenticated = true
-                        saveKey(key)
+                        saveKey(data.Key)
                         Window:Notify({
                             Title="Access Granted",
                             Description="Welcome",
@@ -115,45 +124,41 @@ end
 if not authenticated then return end
 
 ------------------------
--- CONFIG SYSTEM
+-- CONFIG
 ------------------------
 local Flags = {}
 
 local function saveConfig()
-    if not hasFS then return end
-    writefile(CONFIG_FILE, HttpService:JSONEncode(Flags))
-end
-
-local function loadConfig()
-    if hasFS and isfile(CONFIG_FILE) then
-        local data = HttpService:JSONDecode(readfile(CONFIG_FILE))
-        for k,v in pairs(data) do
-            Flags[k] = v
-        end
+    if hasFS then
+        writefile(CONFIG_FILE, HttpService:JSONEncode(Flags))
     end
 end
 
-loadConfig()
+if hasFS and isfile(CONFIG_FILE) then
+    Flags = HttpService:JSONDecode(readfile(CONFIG_FILE))
+end
 
 ------------------------
--- TAB GROUPS
+-- TAB GROUPS (CORRECT)
 ------------------------
-local MainGroup    = Window:TabGroup("Main")
-local ScriptGroup  = Window:TabGroup("Scripts")
-local ExtraGroup   = Window:TabGroup("Extras")
+local MainGroup   = Window:TabGroup()
+local ScriptGroup = Window:TabGroup()
+local ExtraGroup  = Window:TabGroup()
 
-local HomeTab       = MainGroup:Tab("Home")
-local NeedsTab      = MainGroup:Tab("Basic Needs")
-local ExecTab       = ScriptGroup:Tab("Executor")
-local ScriptsTab    = ScriptGroup:Tab("Library")
-local ScriptBloxTab = ScriptGroup:Tab("ScriptBlox")
-local FavoritesTab  = ScriptGroup:Tab("Favorites")
-local NewsTab       = ExtraGroup:Tab("News")
+local HomeTab = MainGroup:Tab({ Name="Home", Icon="home" })
+local NeedsTab = MainGroup:Tab({ Name="Basic Needs", Icon="user" })
+
+local ExecTab = ScriptGroup:Tab({ Name="Executor", Icon="terminal" })
+local ScriptsTab = ScriptGroup:Tab({ Name="Library", Icon="box" })
+local ScriptBloxTab = ScriptGroup:Tab({ Name="ScriptBlox", Icon="search" })
+local FavoritesTab = ScriptGroup:Tab({ Name="Favorites", Icon="star" })
+
+local NewsTab = ExtraGroup:Tab({ Name="News", Icon="bell" })
 
 ------------------------
 -- HOME
 ------------------------
-local HomeSec = HomeTab:Section("Information")
+local HomeSec = HomeTab:Section({ Name="Information" })
 HomeSec:Label("🚀 ExperienceGui v3.1.0")
 HomeSec:Label("Made by CoolDown")
 HomeSec:Label("Client: "..LocalPlayer.Name)
@@ -167,8 +172,7 @@ Flags.JumpPower = Flags.JumpPower or 50
 
 local function applyHumanoid()
     local char = LocalPlayer.Character
-    if not char then return end
-    local hum = char:FindFirstChildOfClass("Humanoid")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
     if hum then
         hum.WalkSpeed = Flags.WalkSpeed
         hum.JumpPower = Flags.JumpPower
@@ -178,7 +182,7 @@ end
 LocalPlayer.CharacterAdded:Connect(applyHumanoid)
 applyHumanoid()
 
-local MoveSec = NeedsTab:Section("Movement")
+local MoveSec = NeedsTab:Section({ Name="Movement" })
 
 MoveSec:Slider({
     Name="WalkSpeed",
@@ -214,7 +218,7 @@ MoveSec:Button({
 ------------------------
 -- EXECUTOR
 ------------------------
-local ExecSec = ExecTab:Section("Execute Code")
+local ExecSec = ExecTab:Section({ Name="Execute Code" })
 local codeBuffer, urlBuffer = "",""
 
 ExecSec:Input({
@@ -246,7 +250,7 @@ ExecSec:Button({
 ------------------------
 -- SCRIPT LIBRARY
 ------------------------
-local LibSec = ScriptsTab:Section("Scripts")
+local LibSec = ScriptsTab:Section({ Name="Scripts" })
 
 task.spawn(function()
     local ok,res = pcall(game.HttpGet,game,
@@ -273,23 +277,21 @@ end)
 -- FAVORITES
 ------------------------
 local favFile = CONFIG_FOLDER.."/Favorites.json"
-local favorites = {}
-
-if hasFS and isfile(favFile) then
-    favorites = HttpService:JSONDecode(readfile(favFile))
-end
+local favorites = hasFS and isfile(favFile) and HttpService:JSONDecode(readfile(favFile)) or {}
 
 local function saveFav()
     if hasFS then writefile(favFile,HttpService:JSONEncode(favorites)) end
 end
 
 local function refreshFav()
-    FavoritesTab:Clear()
-    local sec = FavoritesTab:Section("Favorites")
+    FavoritesTab:ClearSections()
+    local sec = FavoritesTab:Section({ Name="Favorites" })
+
     if #favorites==0 then
         sec:Label("No favorites saved")
         return
     end
+
     for i,f in ipairs(favorites) do
         sec:Button({
             Name="▶ "..f.title,
@@ -314,9 +316,9 @@ refreshFav()
 ------------------------
 -- SCRIPTBLOX
 ------------------------
-local SBsec = ScriptBloxTab:Section("Search")
-
+local SBsec = ScriptBloxTab:Section({ Name="Search" })
 local query=""
+
 SBsec:Input({
     Name="Search",
     Placeholder="Script or game",
@@ -326,15 +328,17 @@ SBsec:Input({
 SBsec:Button({
     Name="Search",
     Callback=function()
-        ScriptBloxTab:Clear()
-        local sec = ScriptBloxTab:Section("Results")
+        ScriptBloxTab:ClearSections()
+        local sec = ScriptBloxTab:Section({ Name="Results" })
+
         local url = query=="" and
             "https://scriptblox.com/api/script/fetch?max=25" or
             "https://scriptblox.com/api/script/search?q="..query.."&max=25"
+
         local ok,res = pcall(game.HttpGet,game,url,true)
         if not ok then sec:Label("Search failed") return end
-        local scripts = HttpService:JSONDecode(res).result.scripts
-        for _,s in ipairs(scripts) do
+
+        for _,s in ipairs(HttpService:JSONDecode(res).result.scripts) do
             sec:Button({
                 Name="▶ "..(s.title or "Untitled"),
                 Callback=function()
@@ -360,7 +364,7 @@ SBsec:Button({
 ------------------------
 -- NEWS
 ------------------------
-local NewsSec = NewsTab:Section("Updates")
+local NewsSec = NewsTab:Section({ Name="Updates" })
 
 local function loadNews()
     NewsSec:Clear()
@@ -371,28 +375,13 @@ local function loadNews()
         return
     end
     local data = HttpService:JSONDecode(res)
-    if data.announcement then
-        NewsSec:Label("📢 "..data.announcement)
-    end
-    if data.changelog then
-        NewsSec:Label("📝 "..data.changelog)
-    end
+    if data.announcement then NewsSec:Label("📢 "..data.announcement) end
+    if data.changelog then NewsSec:Label("📝 "..data.changelog) end
 end
 
 loadNews()
 task.spawn(function()
     while true do task.wait(300) loadNews() end
-end)
-
-------------------------
--- AUTORUN
-------------------------
-task.delay(5,function()
-    pcall(function()
-        loadstring(game:HttpGet(
-            "https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua",true
-        ))()
-    end)
 end)
 
 return Window
