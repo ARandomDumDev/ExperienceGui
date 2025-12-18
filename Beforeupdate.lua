@@ -1,0 +1,582 @@
+-- experienceguimain | Version 3.0.3 | patch
+
+local function StartExperienceGui()
+    local HttpService = game:GetService("HttpService")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+
+    -- Destroy leftover maintenance GUI
+    for _, gui in ipairs(game.CoreGui:GetChildren()) do
+        if gui.Name:find("ExperienceGui - Maintenance") then
+            gui:Destroy()
+        end
+    end
+
+    -- Load Rayfield (keep your original Rayfield URL)
+    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+    -- Main Window (unchanged structure)
+    local Window = Rayfield:CreateWindow({
+        Name = "ExperienceGui",
+        LoadingTitle = "ExperienceGui",
+        LoadingSubtitle = "Made by CoolDown",
+        ConfigurationSaving = { Enabled = true, FolderName = "ExperienceGui", FileName = "Config" },
+        Discord = { Enabled = false },
+        KeySystem = true,
+        KeySettings = {
+            Title = "ExperienceGui Access",
+            Subtitle = "Enter Password",
+            Note = "Password required to continue",
+            FileName = "ExperienceKey",
+            SaveKey = false,
+            GrabKeyFromSite = false,
+            Key = {"CoolDownExperience"}
+        }
+    })
+
+    -- Track key success
+    local keyPassed = false
+    if Window.KeySystem then
+        Window.KeySystem.OnSuccess = function()
+            keyPassed = true
+        end
+    end
+
+    -- Fix X/minimize: hide after successful key entry
+    Window.OnClose = function()
+        if keyPassed then
+            Window:Hide()
+        else
+            Window:Destroy()
+        end
+    end
+
+    -- Tabs
+    local HomeTab = Window:CreateTab("Home", 4483362458)
+    local NeedsTab = Window:CreateTab("Basic Needs", 4483362458)
+    local ScriptsTab = Window:CreateTab("Script Library", 4483362458)
+
+    -- SCRIPT EXECUTOR TAB (before News)
+    local ExecTab = Window:CreateTab("Script Executor", 4483362458)
+    local Section = ExecTab:CreateSection("Run Custom Code")
+    local codeString, urlString = "", ""
+    local CodeInput = ExecTab:CreateInput({
+        Name = "Lua Code",
+        PlaceholderText = "Type Lua code here...",
+        RemoveTextAfterFocusLost = false,
+        Callback = function(text) codeString = text end,
+    })
+    local URLInput = ExecTab:CreateInput({
+        Name = "Script URL",
+        PlaceholderText = "Type script URL here...",
+        RemoveTextAfterFocusLost = false,
+        Callback = function(text) urlString = text end,
+    })
+    ExecTab:CreateButton({
+        Name = "Execute",
+        Callback = function()
+            if codeString ~= "" then
+                local ok, err = pcall(function()
+                    loadstring(codeString)()
+                end)
+                if not ok then warn("Failed to execute Lua code:", err) end
+            elseif urlString ~= "" then
+                local ok, err = pcall(function()
+                    local scriptText = game:HttpGet(urlString)
+                    loadstring(scriptText)()
+                end)
+                if not ok then warn("Failed to execute URL script:", err) end
+            end
+            -- Clear input fields
+            codeString = ""
+            urlString = ""
+            -- attempt to clear UI inputs (if Rayfield supports)
+            pcall(function() ExecTab.Elements["Lua Code"].element.InputFrame.InputBox.Text = "" end)
+            pcall(function() ExecTab.Elements["Script URL"].element.InputFrame.InputBox.Text = "" end)
+        end,
+    })
+
+    local AnnTabPlaceholder -- we'll insert AnnTab later; keep name for placement comment
+
+    -- Version from config (keep original GitHub url)
+    local version = "Unknown"
+    local ok, result = pcall(function()
+        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json")
+    end)
+    if ok then
+        local decodeOk, decoded = pcall(function()
+            return HttpService:JSONDecode(result)
+        end)
+        if decodeOk and decoded.version then
+            version = decoded.version
+        end
+    end
+
+    -- Home tab
+    HomeTab:CreateLabel("Welcome to ExperienceGui")
+    HomeTab:CreateLabel("Made by CoolDown")
+    HomeTab:CreateLabel("Client: " .. LocalPlayer.Name)
+    HomeTab:CreateLabel("Version " .. version)
+
+    -- Needs tab
+    NeedsTab:CreateSlider({
+        Name = "WalkSpeed",
+        Range = {16, 200},
+        Increment = 1,
+        Suffix = " speed",
+        CurrentValue = 16,
+        Flag = "WalkSpeed",
+        Callback = function(Value)
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") then
+                LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed = Value
+            end
+        end,
+    })
+
+    NeedsTab:CreateSlider({
+        Name = "JumpPower",
+        Range = {50, 300},
+        Increment = 5,
+        Suffix = " power",
+        CurrentValue = 50,
+        Flag = "JumpPower",
+        Callback = function(Value)
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid") then
+                LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").JumpPower = Value
+            end
+        end,
+    })
+
+    NeedsTab:CreateButton({
+        Name = "Enable Fly",
+        Callback = function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+        end,
+    })
+
+    -- Autorun (keep original)
+    task.defer(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
+    end)
+
+    -- Script Library (original)
+    local function LoadScriptLibrary()
+        local success, result = pcall(function()
+            return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.txt", true)
+        end)
+        if not success then
+            ScriptsTab:CreateLabel("⚠️ Failed to fetch Scripts.txt")
+            warn("HTTP GET failed:", result)
+            return
+        end
+
+        local scripts
+        local decodeSuccess, decodeResult = pcall(function()
+            return HttpService:JSONDecode(result)
+        end)
+        if not decodeSuccess then
+            ScriptsTab:CreateLabel("⚠️ Failed to decode Scripts.txt")
+            warn("JSON Decode failed:", decodeResult)
+            return
+        end
+
+        scripts = decodeResult
+        if type(scripts) ~= "table" or #scripts == 0 then
+            ScriptsTab:CreateLabel("⚠️ No scripts found")
+            return
+        end
+
+        for _, scriptData in ipairs(scripts) do
+            ScriptsTab:CreateButton({
+                Name = scriptData.name or "Unnamed Script",
+                Callback = function()
+                    if scriptData.url then
+                        local ok, err = pcall(function()
+                            loadstring(game:HttpGet(scriptData.url, true))()
+                        end)
+                        if not ok then warn("Failed to load script:", scriptData.name, err) end
+                    elseif scriptData.code then
+                        local ok, err = pcall(function()
+                            loadstring(scriptData.code)()
+                        end)
+                        if not ok then warn("Failed to execute script:", scriptData.name, err) end
+                    else
+                        warn("No url or code found for script:", scriptData.name)
+                    end
+                end
+            })
+        end
+    end
+    task.defer(function()
+        task.wait(1)
+        pcall(LoadScriptLibrary)
+    end)
+
+    ---------------------------------------------------------------------
+    -- SCRIPTBLOX + FAVORITES (inserted before Announcements)
+    ---------------------------------------------------------------------
+    local ScriptBloxTab = Window:CreateTab("ScriptBlox", 4483362458)
+    local FavoritesTab = Window:CreateTab("Favorites", 4483362458)
+
+    -- Saved favorites file and table
+    local savedScripts = {}
+    local savedFile = "ExperienceGui/SavedScripts.json"
+
+    -- Helper: read saved file (if executor supports readfile)
+    local function LoadSavedScriptsFromFile()
+        if type(readfile) ~= "function" then
+            return
+        end
+        local ok, content = pcall(function() return readfile(savedFile) end)
+        if ok and content and content ~= "" then
+            local sOk, data = pcall(function() return HttpService:JSONDecode(content) end)
+            if sOk and type(data) == "table" then
+                savedScripts = data
+            end
+        end
+    end
+
+    -- Helper: write saved file (if executor supports writefile)
+    local function SaveScriptsToFile()
+        if type(writefile) ~= "function" then
+            return
+        end
+        local ok, json = pcall(function() return HttpService:JSONEncode(savedScripts) end)
+        if ok then
+            pcall(function() writefile(savedFile, json) end)
+        end
+    end
+
+    -- Refresh Favorites UI
+    local function RefreshFavoritesUI()
+        -- clear existing elements if Rayfield supports ClearElements
+        pcall(function() FavoritesTab:ClearElements() end)
+        if #savedScripts == 0 then
+            FavoritesTab:CreateLabel("⚠️ No favorites saved yet")
+            return
+        end
+        for i, s in ipairs(savedScripts) do
+            local title = s.title or ("Saved Script " .. i)
+            FavoritesTab:CreateButton({
+                Name = "▶ "..title,
+                Callback = function()
+                    -- prefer stored code, fall back to stored URL
+                    local ok, err = pcall(function()
+                        if s.code and s.code ~= "" then
+                            loadstring(s.code)()
+                        elseif s.url and s.url ~= "" then
+                            local scriptText = game:HttpGet(s.url, true)
+                            loadstring(scriptText)()
+                        else
+                            warn("Favorite has neither code nor url:", title)
+                        end
+                    end)
+                    if not ok then warn("Failed to run favorite:", title, err) end
+                end
+            })
+            FavoritesTab:CreateButton({
+                Name = "✖ Remove: "..title,
+                Callback = function()
+                    table.remove(savedScripts, i)
+                    SaveScriptsToFile()
+                    RefreshFavoritesUI()
+                end
+            })
+        end
+    end
+
+    -- Save a favorite (avoid exact duplicates by url or title)
+    local function SaveFavorite(entry)
+        entry = entry or {}
+        -- simple duplicate check by url or title
+        for _, e in ipairs(savedScripts) do
+            if entry.url and e.url == entry.url then return end
+            if entry.title and e.title == entry.title and (entry.code == e.code) then return end
+        end
+        table.insert(savedScripts, entry)
+        SaveScriptsToFile()
+        RefreshFavoritesUI()
+    end
+
+    -- Ping check to decide live vs manual search
+    local function MeasurePing(timeoutSeconds)
+        timeoutSeconds = timeoutSeconds or 5
+        local apiProbe = "https://scriptblox.com/api/script/search?limit=1&sort=trending"
+        local startTime = os.clock()
+        local ok, _ = pcall(function()
+            local resp = game:HttpGet(apiProbe, true)
+            -- ignore content, only timing matters
+        end)
+        local elapsed = os.clock() - startTime
+        if not ok then
+            return nil -- failed
+        end
+        return elapsed
+    end
+
+    -- Utility: URL encode (fallback)
+    local function UrlEncode(s)
+        if type(s) ~= "string" then return "" end
+        local ok, enc = pcall(function() return HttpService:UrlEncode(s) end)
+        if ok and type(enc) == "string" then return enc end
+        s = s:gsub("([^%w ])", function(c) return string.format("%%%02X", string.byte(c)) end)
+        s = s:gsub(" ", "+")
+        return s
+    end
+
+    -- Core: perform search on ScriptBlox
+    local function SearchScriptBlox(query, limit)
+        limit = limit or 20
+        local q = query or ""
+        local encoded = UrlEncode(q)
+        local url
+        if q == "" then
+            url = ("https://scriptblox.com/api/script/fetch"):format(limit)
+        else
+            url = ("https://scriptblox.com/api/script/search?limit=%d&q=%s"):format(limit, encoded)
+        end
+
+        local ok, response = pcall(function() return game:HttpGet(url, true) end)
+        if not ok then
+            return nil, ("HTTP GET failed: %s"):format(tostring(response))
+        end
+        local decOk, data = pcall(function() return HttpService:JSONDecode(response) end)
+        if not decOk then
+            return nil, ("JSON decode failed: %s"):format(tostring(data))
+        end
+        if not data or not data.result or not data.result.scripts then
+            return nil, "No scripts in response"
+        end
+        return data.result.scripts, nil
+    end
+
+    -- Render search results in ScriptBloxTab
+    local function RenderScriptBloxResults(scripts)
+        pcall(function() ScriptBloxTab:ClearElements() end)
+        if not scripts or #scripts == 0 then
+            ScriptBloxTab:CreateLabel("⚠️ No scripts found")
+            return
+        end
+        for _, info in ipairs(scripts) do
+            local title = info.title or "Unnamed Script"
+            local gameName = (info.game and info.game.name) or "Unknown Game"
+            local display = ("[%s] %s"):format(gameName, title)
+
+            -- Execute button
+            ScriptBloxTab:CreateButton({
+                Name = "▶ "..display,
+                Callback = function()
+                    -- try inline script content if provided, else fetch script url if exists
+                    local executed = false
+                    if info.script and type(info.script) == "string" and info.script:match("%S") then
+                        local ok, err = pcall(function() loadstring(info.script)() end)
+                        if not ok then warn("Failed to execute inline script:", title, err) end
+                        executed = true
+                    elseif info.scriptUrl and type(info.scriptUrl) == "string" then
+                        local ok, err = pcall(function()
+                            local scriptText = game:HttpGet(info.scriptUrl, true)
+                            loadstring(scriptText)()
+                        end)
+                        if not ok then warn("Failed to fetch/execute script at url:", (info.scriptUrl or "nil"), err) end
+                        executed = true
+                    elseif info.script_id or info._id then
+                        -- fallback: attempt to fetch details by id
+                        local id = info.script_id or info._id
+                        local ok, detailResp = pcall(function()
+                            return game:HttpGet(("https://scriptblox.com/api/script/%s"):format(tostring(id)), true)
+                        end)
+                        if ok then
+                            local dec, det = pcall(function() return HttpService:JSONDecode(detailResp) end)
+                            if dec and det and det.result and det.result.script and type(det.result.script) == "string" then
+                                pcall(function() loadstring(det.result.script)() end)
+                                executed = true
+                            end
+                        end
+                    end
+                    if not executed then
+                        warn("Unable to execute script:", title)
+                    end
+                end
+            })
+
+            -- Save button
+            ScriptBloxTab:CreateButton({
+                Name = "💾 Save: "..display,
+                Callback = function()
+                    local entry = {
+                        title = title,
+                        url = info.scriptUrl or info.url or info.link or nil,
+                        code = (info.script and type(info.script) == "string") and info.script or nil,
+                        id = info._id or info.script_id or nil,
+                        game = (info.game and info.game.name) or nil
+                    }
+                    SaveFavorite(entry)
+                end
+            })
+        end
+    end
+
+    -- Search input handling with live/manual ping logic
+    local searchQuery = ""
+    local liveSearchEnabled = false
+    local pingThreshold = 0.35 -- seconds; lower = more strict (tweak if you like)
+    local lastSearchTick = 0
+    local liveDebounce = 0.5 -- seconds between live queries
+    local liveTicker = nil
+
+    -- Create UI for search
+    local SearchSection = ScriptBloxTab:CreateSection("ScriptBlox Search")
+    local SearchInput = ScriptBloxTab:CreateInput({
+        Name = "Search Query",
+        PlaceholderText = "Type keywords to search ScriptBlox...",
+        RemoveTextAfterFocusLost = false,
+        Callback = function(text)
+            searchQuery = text or ""
+            -- Decide live vs manual based on measured ping
+            -- measure ping once when first typing or when last measured long ago
+            local measureOk, ping = pcall(function() return MeasurePing() end)
+            if measureOk and type(ping) == "number" and ping > 0 and ping <= pingThreshold then
+                liveSearchEnabled = true
+            else
+                liveSearchEnabled = false
+            end
+
+            if liveSearchEnabled then
+                -- throttle live search to avoid spamming
+                local now = tick()
+                if now - lastSearchTick < liveDebounce then
+                    return
+                end
+                lastSearchTick = now
+                -- perform search
+                task.spawn(function()
+                    local scripts, err = SearchScriptBlox(searchQuery, 15)
+                    if not scripts then
+                        pcall(function() ScriptBloxTab:CreateLabel("⚠️ Search failed: "..tostring(err)) end)
+                        return
+                    end
+                    RenderScriptBloxResults(scripts)
+                end)
+            else
+                -- do nothing here; user must press Search button
+            end
+        end,
+    })
+
+    -- Search button for manual mode
+    ScriptBloxTab:CreateButton({
+        Name = "Search (manual)",
+        Callback = function()
+            -- attempt to run a search now
+            ScriptBloxTab:CreateLabel("Searching ScriptBlox...")
+            task.spawn(function()
+                local scripts, err = SearchScriptBlox(searchQuery, 25)
+                if not scripts then
+                    pcall(function() ScriptBloxTab:CreateLabel("⚠️ Search failed: "..tostring(err)) end)
+                    return
+                end
+                RenderScriptBloxResults(scripts)
+            end)
+        end
+    })
+
+    -- Quick trending loader
+    ScriptBloxTab:CreateButton({
+        Name = "Load Trending",
+        Callback = function()
+            ScriptBloxTab:CreateLabel("Loading trending scripts...")
+            task.spawn(function()
+                local scripts, err = SearchScriptBlox("", 25)
+                if not scripts then
+                    pcall(function() ScriptBloxTab:CreateLabel("⚠️ Trending load failed: "..tostring(err)) end)
+                    return
+                end
+                RenderScriptBloxResults(scripts)
+            end)
+        end
+    })
+
+    -- Initial load: check ping and load trending or placeholder
+    task.defer(function()
+        local ping = nil
+        local ok, res = pcall(function() ping = MeasurePing() end)
+        if ok and type(ping) == "number" and ping > 0 and ping <= pingThreshold then
+            -- fast: live search allowed, load trending
+            local scripts, err = SearchScriptBlox("", 20)
+            if scripts then
+                RenderScriptBloxResults(scripts)
+            else
+                ScriptBloxTab:CreateLabel("⚠️ Failed to load trending: "..tostring(err))
+            end
+        else
+            -- slow or failed ping: show manual UI hint
+            ScriptBloxTab:CreateLabel("Manual mode: press Search (manual) after typing query (slow ping or probe failed).")
+            -- still allow user to press Load Trending if they want
+        end
+    end)
+
+    -- Load saved favorites from file and refresh UI
+    LoadSavedScriptsFromFile()
+    RefreshFavoritesUI()
+
+    ---------------------------------------------------------------------
+    -- Announcements (the original block — inserted after ScriptBlox/Favorites)
+    ---------------------------------------------------------------------
+    local AnnTab = Window:CreateTab("News", 4483362458)
+    local announcementsUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/announcementsChangelogs.json"
+    local announcementLabels = {}
+
+    local function ClearOldLabels()
+        for _, label in ipairs(announcementLabels) do
+            pcall(function() label:Set("Text", "") end)
+        end
+        announcementLabels = {}
+    end
+
+    local function LoadAnnouncements()
+        ClearOldLabels()
+        local success, result = pcall(function()
+            return game:HttpGet(announcementsUrl, true)
+        end)
+        if not success then
+            table.insert(announcementLabels, AnnTab:CreateLabel("⚠️ Failed to fetch announcements"))
+            warn("HTTP GET failed:", result)
+            return
+        end
+
+        local data
+        local decodeSuccess, decodeResult = pcall(function()
+            return HttpService:JSONDecode(result)
+        end)
+        if not decodeSuccess then
+            table.insert(announcementLabels, AnnTab:CreateLabel("⚠️ Failed to decode announcements"))
+            warn("JSON Decode failed:", decodeResult)
+            return
+        end
+
+        data = decodeResult
+        if data.announcement then
+            table.insert(announcementLabels, AnnTab:CreateLabel("📢 " .. data.announcement))
+        else
+            table.insert(announcementLabels, AnnTab:CreateLabel("📢 No announcement at this time"))
+        end
+
+        if data.changelog then
+            table.insert(announcementLabels, AnnTab:CreateLabel("📝 " .. data.changelog))
+        else
+            table.insert(announcementLabels, AnnTab:CreateLabel("📝 No changelog available"))
+        end
+    end
+    task.defer(function()
+        while true do
+            LoadAnnouncements()
+            task.wait(60)
+        end
+    end)
+
+    -- Return the window so loader can manage currentGui
+    return Window
+end
+
+-- Call function and return for loader
+return StartExperienceGui()
