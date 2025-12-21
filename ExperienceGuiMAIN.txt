@@ -1,4 +1,4 @@
--- ExperienceGui | MacLib Frontend | FIXED WITH BLOCKING AUTH
+-- ExperienceGui | MacLib Frontend | COMPLETE FIXED VERSION
 
 ------------------------
 -- SERVICES
@@ -89,6 +89,48 @@ Window:SetScale(1.07)
 Window:SetAcrylicBlurState(true)
 
 ------------------------
+-- GLOBAL SETTINGS (Added back)
+------------------------
+local globalSettings = {
+    UIBlurToggle = Window:GlobalSetting({
+        Name = "UI Blur",
+        Default = Window:GetAcrylicBlurState(),
+        Callback = function(bool)
+            Window:SetAcrylicBlurState(bool)
+            Window:Notify({
+                Title = Window.Settings.Title,
+                Description = (bool and "Enabled" or "Disabled") .. " UI Blur",
+                Lifetime = 3
+            })
+        end,
+    }),
+    NotificationToggler = Window:GlobalSetting({
+        Name = "Notifications",
+        Default = Window:GetNotificationsState(),
+        Callback = function(bool)
+            Window:SetNotificationsState(bool)
+            Window:Notify({
+                Title = Window.Settings.Title,
+                Description = (bool and "Enabled" or "Disabled") .. " Notifications",
+                Lifetime = 3
+            })
+        end,
+    }),
+    ShowUserInfo = Window:GlobalSetting({
+        Name = "Show User Info",
+        Default = Window:GetUserInfoState(),
+        Callback = function(bool)
+            Window:SetUserInfoState(bool)
+            Window:Notify({
+                Title = Window.Settings.Title,
+                Description = (bool and "Showing" or "Redacted") .. " User Info",
+                Lifetime = 3
+            })
+        end,
+    })
+}
+
+------------------------
 -- BLOCKING AUTHENTICATION
 ------------------------
 if not authenticated then
@@ -121,7 +163,7 @@ if not authenticated then
                     Lifetime = 3
                 })
                 -- Remove auth tab
-                authTabGroup:Remove() -- This removes the auth tab group
+                authTabGroup:Remove()
                 -- Now create the main UI
                 createMainUI()
             else
@@ -130,7 +172,7 @@ if not authenticated then
                     Description = "Please check your key and try again",
                     Lifetime = 3
                 })
-                keyInputElement:Set("") -- Clear the input
+                keyInputElement:Set("")
                 keyInput = ""
             end
         end
@@ -142,7 +184,6 @@ if not authenticated then
     end
     
     -- STOP HERE - Don't proceed until auth is successful
-    -- The rest of the UI will be created by createMainUI() after auth
     return Window
 end
 
@@ -173,16 +214,17 @@ function createMainUI()
     end
     
     ------------------------
-    -- TAB GROUPS (Correct from official example)
+    -- TAB GROUPS
     ------------------------
     local MainTabGroup = Window:TabGroup()
     local ScriptTabGroup = Window:TabGroup()
     local ExtraTabGroup = Window:TabGroup()
+    local SettingsTabGroup = Window:TabGroup()  -- For settings tab
     
     -- Main tabs
     local HomeTab = MainTabGroup:Tab({ 
         Name = "Home", 
-        Image = "rbxassetid://18821914323"  -- Using Image instead of Icon
+        Image = "rbxassetid://18821914323"
     })
     local NeedsTab = MainTabGroup:Tab({ 
         Name = "Basic Needs", 
@@ -213,6 +255,12 @@ function createMainUI()
         Image = "rbxassetid://10734950309" 
     })
     
+    -- Settings tab (from official example)
+    local SettingsTab = SettingsTabGroup:Tab({ 
+        Name = "Settings", 
+        Image = "rbxassetid://10734950309" 
+    })
+    
     ------------------------
     -- HOME TAB
     ------------------------
@@ -223,6 +271,37 @@ function createMainUI()
     HomeSection:Label({ Text = "User ID: " .. LocalPlayer.UserId })
     HomeSection:Divider()
     HomeSection:Label({ Text = "✅ Authenticated | All features unlocked" })
+    
+    -- Add some UI elements from official example
+    HomeSection:Button({
+        Name = "Test Dialog",
+        Callback = function()
+            Window:Dialog({
+                Title = Window.Settings.Title,
+                Description = "This is a test dialog from ExperienceGui",
+                Buttons = {
+                    {
+                        Name = "Confirm",
+                        Callback = function()
+                            print("Confirmed!")
+                        end,
+                    },
+                    {
+                        Name = "Cancel"
+                    }
+                }
+            })
+        end,
+    })
+    
+    HomeSection:Colorpicker({
+        Name = "UI Accent Color",
+        Default = Color3.fromRGB(85, 160, 255),
+        Callback = function(color)
+            Window.Settings.Theme.Accent = color
+            Window:UpdateTheme()
+        end,
+    })
     
     ------------------------
     -- BASIC NEEDS TAB
@@ -326,6 +405,12 @@ function createMainUI()
                         Description = tostring(err):sub(1, 100),
                         Lifetime = 5
                     })
+                else
+                    Window:Notify({
+                        Title = "✅ Success",
+                        Description = "Code executed successfully",
+                        Lifetime = 3
+                    })
                 end
             elseif urlBuffer ~= "" then
                 local success, err = pcall(function()
@@ -336,6 +421,12 @@ function createMainUI()
                         Title = "Download Error",
                         Description = tostring(err):sub(1, 100),
                         Lifetime = 5
+                    })
+                else
+                    Window:Notify({
+                        Title = "✅ Success",
+                        Description = "Script loaded from URL",
+                        Lifetime = 3
                     })
                 end
             else
@@ -611,6 +702,61 @@ function createMainUI()
     end)
     
     ------------------------
+    -- SETTINGS TAB (Added back)
+    ------------------------
+    local SettingsSection = SettingsTab:Section({ Side = "Left" })
+    SettingsSection:Header({ Name = "Settings" })
+    
+    -- Add config saving section
+    SettingsTab:InsertConfigSection("Left")
+    
+    -- Add theme color picker
+    SettingsSection:Colorpicker({
+        Name = "Theme Color",
+        Default = Color3.fromRGB(85, 160, 255),
+        Callback = function(color)
+            Window.Settings.Theme.Accent = color
+            Window:UpdateTheme()
+        end,
+    })
+    
+    SettingsSection:Button({
+        Name = "Reset Settings",
+        Callback = function()
+            Window:Dialog({
+                Title = "Reset Settings",
+                Description = "Are you sure you want to reset all settings?",
+                Buttons = {
+                    {
+                        Name = "Confirm",
+                        Callback = function()
+                            -- Clear config files
+                            if hasFS and isfile(CONFIG_FILE) then
+                                delfile(CONFIG_FILE)
+                            end
+                            if hasFS and isfile(KEY_FILE) then
+                                delfile(KEY_FILE)
+                            end
+                            if hasFS and isfile(favFile) then
+                                delfile(favFile)
+                            end
+                            
+                            Window:Notify({
+                                Title = "Settings Reset",
+                                Description = "All settings have been reset. Restart the GUI.",
+                                Lifetime = 5
+                            })
+                        end
+                    },
+                    {
+                        Name = "Cancel"
+                    }
+                }
+            })
+        end
+    })
+    
+    ------------------------
     -- SELECT HOME TAB BY DEFAULT
     ------------------------
     HomeTab:Select()
@@ -619,25 +765,23 @@ function createMainUI()
     -- CONFIG SYSTEM
     ------------------------
     MacLib:SetFolder("ExperienceGui")
-    NeedsTab:InsertConfigSection("Left")
+    MacLib:LoadAutoLoadConfig()
     
     ------------------------
     -- WINDOW UNLOAD EVENT
     ------------------------
     Window.onUnloaded(function()
         print("ExperienceGui unloaded")
+        saveConfig()
     end)
-    
-    -- Load any saved config
-    MacLib:LoadAutoLoadConfig()
     
     Window:Notify({
         Title = "✅ ExperienceGui",
-        Description = "Successfully loaded!",
+        Description = "Successfully loaded with all features!",
         Lifetime = 3
     })
     
-    print("Main UI created successfully!")
+    print("Main UI created successfully with all functionality!")
 end
 
 -- If already authenticated, create main UI immediately
