@@ -1,4 +1,4 @@
--- ExperienceGui | MacLib Frontend | FULL PATCHED REWRITE
+-- ExperienceGui | MacLib Frontend | FIXED WITH BLOCKING AUTH
 
 ------------------------
 -- SERVICES
@@ -15,7 +15,7 @@ local CONFIG_FOLDER = "ExperienceGui"
 local CONFIG_FILE = CONFIG_FOLDER.."/Config.json"
 local KEY_FILE = CONFIG_FOLDER.."/Key.txt"
 
-if hasFS and not isfolder(CONFIG_FOLDER) then
+if hasFS and type(makefolder)=="function" and not isfolder(CONFIG_FOLDER) then
     makefolder(CONFIG_FOLDER)
 end
 
@@ -46,13 +46,16 @@ local VALID_KEYS = {
 local authenticated = false
 
 local function saveKey(key)
-    if hasFS then writefile(KEY_FILE, key) end
+    if hasFS then 
+        writefile(KEY_FILE, key) 
+    end
 end
 
 local function loadKey()
     if hasFS and isfile(KEY_FILE) then
         return readfile(KEY_FILE)
     end
+    return nil
 end
 
 local savedKey = loadKey()
@@ -66,322 +69,580 @@ end
 local Window = MacLib:Window({
     Title = "ExperienceGui",
     Subtitle = "Made by CoolDown | MacLib",
-    Size = UDim2.fromOffset(900,680),
+    Size = UDim2.fromOffset(900, 680),
     DragStyle = 1,
     ShowUserInfo = true,
     Keybind = Enum.KeyCode.RightControl,
     AcrylicBlur = true
 })
 
+-- Set theme
 Window.Settings.Theme = {
-    Accent = Color3.fromRGB(85,160,255),
-    Background = Color3.fromRGB(12,15,22),
-    Secondary = Color3.fromRGB(18,22,32),
-    Text = Color3.fromRGB(240,240,240),
-    Muted = Color3.fromRGB(160,160,160),
+    Accent = Color3.fromRGB(85, 160, 255),
+    Background = Color3.fromRGB(12, 15, 22),
+    Secondary = Color3.fromRGB(18, 22, 32),
+    Text = Color3.fromRGB(240, 240, 240),
+    Muted = Color3.fromRGB(160, 160, 160),
 }
 
 Window:SetScale(1.07)
 Window:SetAcrylicBlurState(true)
 
 ------------------------
--- AUTH DIALOG
+-- BLOCKING AUTHENTICATION
 ------------------------
 if not authenticated then
-    Window:Prompt({
-        Title = "ExperienceGui Access",
-        Description = "Enter Password",
-        Inputs = {
-            { Name="Key", Placeholder="Enter key" }
-        },
-        Buttons = {
-            {
-                Text = "Confirm",
-                Callback = function(data)
-                    if VALID_KEYS[data.Key] then
-                        authenticated = true
-                        saveKey(data.Key)
+    -- Create a simple auth UI that blocks everything
+    local authTabGroup = Window:TabGroup()
+    local authTab = authTabGroup:Tab({ Name = "🔒 AUTHENTICATION", Image = "rbxassetid://10734950309" })
+    local authSection = authTab:Section({ Side = "Left" })
+    
+    authSection:Header({ Name = "ExperienceGui Access" })
+    authSection:Label({ Text = "Enter your key to unlock all features" })
+    
+    local keyInput = ""
+    local keyInputElement = authSection:Input({
+        Name = "Access Key",
+        Placeholder = "Enter key here",
+        Callback = function(input)
+            keyInput = input
+        end
+    })
+    
+    authSection:Button({
+        Name = "🔓 Authenticate",
+        Callback = function()
+            if VALID_KEYS[keyInput] then
+                authenticated = true
+                saveKey(keyInput)
+                Window:Notify({
+                    Title = "✅ Access Granted",
+                    Description = "Welcome to ExperienceGui!",
+                    Lifetime = 3
+                })
+                -- Remove auth tab
+                authTabGroup:Remove() -- This removes the auth tab group
+                -- Now create the main UI
+                createMainUI()
+            else
+                Window:Notify({
+                    Title = "❌ Invalid Key",
+                    Description = "Please check your key and try again",
+                    Lifetime = 3
+                })
+                keyInputElement:Set("") -- Clear the input
+                keyInput = ""
+            end
+        end
+    })
+    
+    -- Show error if saved key was invalid
+    if savedKey and not VALID_KEYS[savedKey] then
+        authSection:Label({ Text = "⚠ Saved key was invalid. Please enter a new key." })
+    end
+    
+    -- STOP HERE - Don't proceed until auth is successful
+    -- The rest of the UI will be created by createMainUI() after auth
+    return Window
+end
+
+------------------------
+-- MAIN UI CREATION FUNCTION
+------------------------
+function createMainUI()
+    print("Creating main UI...")
+    
+    ------------------------
+    -- CONFIG
+    ------------------------
+    local Flags = {}
+    
+    local function saveConfig()
+        if hasFS then
+            writefile(CONFIG_FILE, HttpService:JSONEncode(Flags))
+        end
+    end
+    
+    if hasFS and isfile(CONFIG_FILE) then
+        local success, data = pcall(function()
+            return HttpService:JSONDecode(readfile(CONFIG_FILE))
+        end)
+        if success then
+            Flags = data
+        end
+    end
+    
+    ------------------------
+    -- TAB GROUPS (Correct from official example)
+    ------------------------
+    local MainTabGroup = Window:TabGroup()
+    local ScriptTabGroup = Window:TabGroup()
+    local ExtraTabGroup = Window:TabGroup()
+    
+    -- Main tabs
+    local HomeTab = MainTabGroup:Tab({ 
+        Name = "Home", 
+        Image = "rbxassetid://18821914323"  -- Using Image instead of Icon
+    })
+    local NeedsTab = MainTabGroup:Tab({ 
+        Name = "Basic Needs", 
+        Image = "rbxassetid://10734950309" 
+    })
+    
+    -- Script tabs
+    local ExecTab = ScriptTabGroup:Tab({ 
+        Name = "Executor", 
+        Image = "rbxassetid://10734950309" 
+    })
+    local ScriptsTab = ScriptTabGroup:Tab({ 
+        Name = "Library", 
+        Image = "rbxassetid://10734950309" 
+    })
+    local ScriptBloxTab = ScriptTabGroup:Tab({ 
+        Name = "ScriptBlox", 
+        Image = "rbxassetid://10734950309" 
+    })
+    local FavoritesTab = ScriptTabGroup:Tab({ 
+        Name = "Favorites", 
+        Image = "rbxassetid://10734950309" 
+    })
+    
+    -- Extra tabs
+    local NewsTab = ExtraTabGroup:Tab({ 
+        Name = "News", 
+        Image = "rbxassetid://10734950309" 
+    })
+    
+    ------------------------
+    -- HOME TAB
+    ------------------------
+    local HomeSection = HomeTab:Section({ Side = "Left" })
+    HomeSection:Header({ Name = "🏠 ExperienceGui v3.1.0" })
+    HomeSection:Label({ Text = "Made by CoolDown" })
+    HomeSection:Label({ Text = "Client: " .. LocalPlayer.Name })
+    HomeSection:Label({ Text = "User ID: " .. LocalPlayer.UserId })
+    HomeSection:Divider()
+    HomeSection:Label({ Text = "✅ Authenticated | All features unlocked" })
+    
+    ------------------------
+    -- BASIC NEEDS TAB
+    ------------------------
+    Flags.WalkSpeed = Flags.WalkSpeed or 16
+    Flags.JumpPower = Flags.JumpPower or 50
+    
+    local function applyHumanoid()
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = Flags.WalkSpeed
+            hum.JumpPower = Flags.JumpPower
+        end
+    end
+    
+    LocalPlayer.CharacterAdded:Connect(applyHumanoid)
+    applyHumanoid()
+    
+    local MoveSection = NeedsTab:Section({ Side = "Left" })
+    MoveSection:Header({ Name = "Movement" })
+    
+    MoveSection:Slider({
+        Name = "WalkSpeed",
+        Default = Flags.WalkSpeed,
+        Minimum = 16,
+        Maximum = 500,
+        Precision = 0,
+        Callback = function(value)
+            Flags.WalkSpeed = value
+            applyHumanoid()
+            saveConfig()
+        end
+    })
+    
+    MoveSection:Slider({
+        Name = "JumpPower",
+        Default = Flags.JumpPower,
+        Minimum = 50,
+        Maximum = 500,
+        Precision = 0,
+        Callback = function(value)
+            Flags.JumpPower = value
+            applyHumanoid()
+            saveConfig()
+        end
+    })
+    
+    MoveSection:Button({
+        Name = "Enable Fly",
+        Callback = function()
+            local success, err = pcall(function()
+                loadstring(game:HttpGet(
+                    "https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt",
+                    true
+                ))()
+            end)
+            if not success then
+                Window:Notify({
+                    Title = "Error",
+                    Description = "Failed to load fly script",
+                    Lifetime = 5
+                })
+            end
+        end
+    })
+    
+    ------------------------
+    -- EXECUTOR TAB
+    ------------------------
+    local ExecSection = ExecTab:Section({ Side = "Left" })
+    ExecSection:Header({ Name = "Execute Code" })
+    
+    local codeBuffer = ""
+    local urlBuffer = ""
+    
+    ExecSection:Input({
+        Name = "Lua Code",
+        Placeholder = "Paste code here",
+        Callback = function(input)
+            codeBuffer = input
+        end
+    })
+    
+    ExecSection:Input({
+        Name = "Script URL",
+        Placeholder = "Paste URL here",
+        Callback = function(input)
+            urlBuffer = input
+        end
+    })
+    
+    ExecSection:Button({
+        Name = "▶ Execute",
+        Callback = function()
+            if codeBuffer ~= "" then
+                local success, err = pcall(loadstring(codeBuffer))
+                if not success then
+                    Window:Notify({
+                        Title = "Execution Error",
+                        Description = tostring(err):sub(1, 100),
+                        Lifetime = 5
+                    })
+                end
+            elseif urlBuffer ~= "" then
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet(urlBuffer, true))()
+                end)
+                if not success then
+                    Window:Notify({
+                        Title = "Download Error",
+                        Description = tostring(err):sub(1, 100),
+                        Lifetime = 5
+                    })
+                end
+            else
+                Window:Notify({
+                    Title = "No Code",
+                    Description = "Please enter code or URL first",
+                    Lifetime = 3
+                })
+            end
+            codeBuffer = ""
+            urlBuffer = ""
+        end
+    })
+    
+    ------------------------
+    -- SCRIPT LIBRARY TAB
+    ------------------------
+    local LibSection = ScriptsTab:Section({ Side = "Left" })
+    LibSection:Header({ Name = "Script Library" })
+    
+    task.spawn(function()
+        local success, res = pcall(game.HttpGet, game,
+            "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/Scripts.json", true)
+        
+        if not success then
+            LibSection:Label({ Text = "❌ Failed to load scripts. Check connection." })
+            return
+        end
+        
+        local ok, scripts = pcall(HttpService.JSONDecode, HttpService, res)
+        if not ok or not scripts then
+            LibSection:Label({ Text = "❌ Invalid script data." })
+            return
+        end
+        
+        for _, scriptData in ipairs(scripts) do
+            LibSection:Button({
+                Name = "▶ " .. (scriptData.name or "Unnamed Script"),
+                Callback = function()
+                    local success, err = pcall(function()
+                        if scriptData.url then
+                            loadstring(game:HttpGet(scriptData.url, true))()
+                        elseif scriptData.code then
+                            loadstring(scriptData.code)()
+                        end
+                    end)
+                    if not success then
                         Window:Notify({
-                            Title="Access Granted",
-                            Description="Welcome",
-                            Lifetime=3
+                            Title = "Script Error",
+                            Description = tostring(err):sub(1, 100),
+                            Lifetime = 5
                         })
                     else
                         Window:Notify({
-                            Title="Invalid Key",
-                            Description="Access denied",
-                            Lifetime=3
+                            Title = "Script Loaded",
+                            Description = "Successfully executed: " .. (scriptData.name or "script"),
+                            Lifetime = 3
                         })
-                        task.wait(1)
-                        Window:Unload()
                     end
                 end
-            }
-        }
-    })
-end
-
-if not authenticated then return end
-
-------------------------
--- CONFIG
-------------------------
-local Flags = {}
-
-local function saveConfig()
-    if hasFS then
-        writefile(CONFIG_FILE, HttpService:JSONEncode(Flags))
-    end
-end
-
-if hasFS and isfile(CONFIG_FILE) then
-    Flags = HttpService:JSONDecode(readfile(CONFIG_FILE))
-end
-
-------------------------
--- TAB GROUPS (CORRECT)
-------------------------
-local MainGroup   = Window:TabGroup()
-local ScriptGroup = Window:TabGroup()
-local ExtraGroup  = Window:TabGroup()
-
-local HomeTab = MainGroup:Tab({ Name="Home", Icon="home" })
-local NeedsTab = MainGroup:Tab({ Name="Basic Needs", Icon="user" })
-
-local ExecTab = ScriptGroup:Tab({ Name="Executor", Icon="terminal" })
-local ScriptsTab = ScriptGroup:Tab({ Name="Library", Icon="box" })
-local ScriptBloxTab = ScriptGroup:Tab({ Name="ScriptBlox", Icon="search" })
-local FavoritesTab = ScriptGroup:Tab({ Name="Favorites", Icon="star" })
-
-local NewsTab = ExtraGroup:Tab({ Name="News", Icon="bell" })
-
-------------------------
--- HOME
-------------------------
-local HomeSec = HomeTab:Section({ Name="Information" })
-HomeSec:Label("🚀 ExperienceGui v3.1.0")
-HomeSec:Label("Made by CoolDown")
-HomeSec:Label("Client: "..LocalPlayer.Name)
-HomeSec:Label("User ID: "..LocalPlayer.UserId)
-
-------------------------
--- BASIC NEEDS
-------------------------
-Flags.WalkSpeed = Flags.WalkSpeed or 16
-Flags.JumpPower = Flags.JumpPower or 50
-
-local function applyHumanoid()
-    local char = LocalPlayer.Character
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.WalkSpeed = Flags.WalkSpeed
-        hum.JumpPower = Flags.JumpPower
-    end
-end
-
-LocalPlayer.CharacterAdded:Connect(applyHumanoid)
-applyHumanoid()
-
-local MoveSec = NeedsTab:Section({ Name="Movement" })
-
-MoveSec:Slider({
-    Name="WalkSpeed",
-    Min=16, Max=500,
-    Default=Flags.WalkSpeed,
-    Callback=function(v)
-        Flags.WalkSpeed=v
-        applyHumanoid()
-        saveConfig()
-    end
-})
-
-MoveSec:Slider({
-    Name="JumpPower",
-    Min=50, Max=500,
-    Default=Flags.JumpPower,
-    Callback=function(v)
-        Flags.JumpPower=v
-        applyHumanoid()
-        saveConfig()
-    end
-})
-
-MoveSec:Button({
-    Name="Enable Fly",
-    Callback=function()
-        loadstring(game:HttpGet(
-            "https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"
-        ))()
-    end
-})
-
-------------------------
--- EXECUTOR
-------------------------
-local ExecSec = ExecTab:Section({ Name="Execute Code" })
-local codeBuffer, urlBuffer = "",""
-
-ExecSec:Input({
-    Name="Lua Code",
-    Placeholder="Paste code",
-    Callback=function(t) codeBuffer=t end
-})
-
-ExecSec:Input({
-    Name="Script URL",
-    Placeholder="Paste URL",
-    Callback=function(t) urlBuffer=t end
-})
-
-ExecSec:Button({
-    Name="Execute",
-    Callback=function()
-        if codeBuffer~="" then
-            pcall(loadstring(codeBuffer))
-        elseif urlBuffer~="" then
-            pcall(function()
-                loadstring(game:HttpGet(urlBuffer,true))()
-            end)
+            })
         end
-        codeBuffer,urlBuffer="",""
+    end)
+    
+    ------------------------
+    -- FAVORITES TAB
+    ------------------------
+    local favFile = CONFIG_FOLDER .. "/Favorites.json"
+    local favorites = {}
+    
+    if hasFS and isfile(favFile) then
+        local success, data = pcall(function()
+            return HttpService:JSONDecode(readfile(favFile))
+        end)
+        if success and type(data) == "table" then
+            favorites = data
+        end
     end
-})
-
-------------------------
--- SCRIPT LIBRARY
-------------------------
-local LibSec = ScriptsTab:Section({ Name="Scripts" })
-
-task.spawn(function()
-    local ok,res = pcall(game.HttpGet,game,
-        "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/Scripts.json",true)
-    if not ok then
-        LibSec:Label("Failed to load scripts")
-        return
+    
+    local function saveFav()
+        if hasFS then
+            writefile(favFile, HttpService:JSONEncode(favorites))
+        end
     end
-    for _,s in ipairs(HttpService:JSONDecode(res)) do
-        LibSec:Button({
-            Name="▶ "..(s.name or "Unnamed"),
-            Callback=function()
-                if s.url then
-                    loadstring(game:HttpGet(s.url,true))()
-                elseif s.code then
-                    loadstring(s.code)()
-                end
-            end
-        })
-    end
-end)
-
-------------------------
--- FAVORITES
-------------------------
-local favFile = CONFIG_FOLDER.."/Favorites.json"
-local favorites = hasFS and isfile(favFile) and HttpService:JSONDecode(readfile(favFile)) or {}
-
-local function saveFav()
-    if hasFS then writefile(favFile,HttpService:JSONEncode(favorites)) end
-end
-
-local function refreshFav()
-    FavoritesTab:ClearSections()
-    local sec = FavoritesTab:Section({ Name="Favorites" })
-
-    if #favorites==0 then
-        sec:Label("No favorites saved")
-        return
-    end
-
-    for i,f in ipairs(favorites) do
-        sec:Button({
-            Name="▶ "..f.title,
-            Callback=function()
-                if f.code then loadstring(f.code)()
-                elseif f.url then loadstring(game:HttpGet(f.url,true))() end
-            end
-        })
-        sec:Button({
-            Name="Remove",
-            Callback=function()
-                table.remove(favorites,i)
-                saveFav()
-                refreshFav()
-            end
-        })
-    end
-end
-
-refreshFav()
-
-------------------------
--- SCRIPTBLOX
-------------------------
-local SBsec = ScriptBloxTab:Section({ Name="Search" })
-local query=""
-
-SBsec:Input({
-    Name="Search",
-    Placeholder="Script or game",
-    Callback=function(t) query=t end
-})
-
-SBsec:Button({
-    Name="Search",
-    Callback=function()
-        ScriptBloxTab:ClearSections()
-        local sec = ScriptBloxTab:Section({ Name="Results" })
-
-        local url = query=="" and
-            "https://scriptblox.com/api/script/fetch?max=25" or
-            "https://scriptblox.com/api/script/search?q="..query.."&max=25"
-
-        local ok,res = pcall(game.HttpGet,game,url,true)
-        if not ok then sec:Label("Search failed") return end
-
-        for _,s in ipairs(HttpService:JSONDecode(res).result.scripts) do
-            sec:Button({
-                Name="▶ "..(s.title or "Untitled"),
-                Callback=function()
-                    if s.script then loadstring(s.script)()
-                    elseif s.scriptUrl then loadstring(game:HttpGet(s.scriptUrl,true))() end
+    
+    local function refreshFav()
+        FavoritesTab:ClearSections()
+        local favSection = FavoritesTab:Section({ Side = "Left" })
+        favSection:Header({ Name = "⭐ Favorites" })
+        
+        if #favorites == 0 then
+            favSection:Label({ Text = "No favorites saved yet." })
+            favSection:Label({ Text = "Add scripts from ScriptBlox or Library!" })
+            return
+        end
+        
+        for i, fav in ipairs(favorites) do
+            favSection:Button({
+                Name = "▶ " .. (fav.title or "Unnamed"),
+                Callback = function()
+                    local success, err = pcall(function()
+                        if fav.code then
+                            loadstring(fav.code)()
+                        elseif fav.url then
+                            loadstring(game:HttpGet(fav.url, true))()
+                        end
+                    end)
+                    if not success then
+                        Window:Notify({
+                            Title = "Favorite Error",
+                            Description = tostring(err):sub(1, 100),
+                            Lifetime = 5
+                        })
+                    end
                 end
             })
-            sec:Button({
-                Name="⭐ Favorite",
-                Callback=function()
-                    table.insert(favorites,{
-                        title=s.title,
-                        code=s.script,
-                        url=s.scriptUrl
-                    })
+            
+            favSection:Button({
+                Name = "🗑️ Remove",
+                Callback = function()
+                    table.remove(favorites, i)
                     saveFav()
+                    refreshFav()
+                    Window:Notify({
+                        Title = "Favorite Removed",
+                        Description = "Removed from favorites",
+                        Lifetime = 3
+                    })
                 end
             })
+            
+            favSection:Divider()
         end
     end
-})
-
-------------------------
--- NEWS
-------------------------
-local NewsSec = NewsTab:Section({ Name="Updates" })
-
-local function loadNews()
-    NewsSec:Clear()
-    local ok,res = pcall(game.HttpGet,game,
-        "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/announcementsChangelogs.json",true)
-    if not ok then
-        NewsSec:Label("Failed to fetch news")
-        return
+    
+    refreshFav()
+    
+    ------------------------
+    -- SCRIPTBLOX TAB
+    ------------------------
+    local SBSection = ScriptBloxTab:Section({ Side = "Left" })
+    SBSection:Header({ Name = "ScriptBlox Search" })
+    
+    local searchQuery = ""
+    
+    SBSection:Input({
+        Name = "Search Query",
+        Placeholder = "Enter script or game name",
+        Callback = function(input)
+            searchQuery = input
+        end
+    })
+    
+    SBSection:Button({
+        Name = "🔍 Search ScriptBlox",
+        Callback = function()
+            ScriptBloxTab:ClearSections()
+            local resultsSection = ScriptBloxTab:Section({ Side = "Left" })
+            resultsSection:Header({ Name = "Search Results" })
+            
+            local url
+            if searchQuery == "" or searchQuery == nil then
+                url = "https://scriptblox.com/api/script/fetch?max=25"
+            else
+                url = "https://scriptblox.com/api/script/search?q=" .. searchQuery .. "&max=25"
+            end
+            
+            local success, res = pcall(game.HttpGet, game, url, true)
+            if not success then
+                resultsSection:Label({ Text = "❌ Failed to fetch results. Check connection." })
+                return
+            end
+            
+            local ok, data = pcall(HttpService.JSONDecode, HttpService, res)
+            if not ok or not data or not data.result or not data.result.scripts then
+                resultsSection:Label({ Text = "❌ Invalid response from ScriptBlox." })
+                return
+            end
+            
+            for _, scriptData in ipairs(data.result.scripts) do
+                resultsSection:Button({
+                    Name = "▶ " .. (scriptData.title or "Untitled"),
+                    Callback = function()
+                        local success, err = pcall(function()
+                            if scriptData.script then
+                                loadstring(scriptData.script)()
+                            elseif scriptData.scriptUrl then
+                                loadstring(game:HttpGet(scriptData.scriptUrl, true))()
+                            end
+                        end)
+                        if not success then
+                            Window:Notify({
+                                Title = "Script Error",
+                                Description = tostring(err):sub(1, 100),
+                                Lifetime = 5
+                            })
+                        else
+                            Window:Notify({
+                                Title = "Script Loaded",
+                                Description = "Successfully loaded: " .. (scriptData.title or "script"),
+                                Lifetime = 3
+                            })
+                        end
+                    end
+                })
+                
+                resultsSection:Button({
+                    Name = "⭐ Add to Favorites",
+                    Callback = function()
+                        table.insert(favorites, {
+                            title = scriptData.title or "Untitled",
+                            code = scriptData.script,
+                            url = scriptData.scriptUrl
+                        })
+                        saveFav()
+                        refreshFav()
+                        Window:Notify({
+                            Title = "Added to Favorites",
+                            Description = "Script saved to favorites",
+                            Lifetime = 3
+                        })
+                    end
+                })
+                
+                resultsSection:Divider()
+            end
+        end
+    })
+    
+    ------------------------
+    -- NEWS TAB
+    ------------------------
+    local NewsSection = NewsTab:Section({ Side = "Left" })
+    NewsSection:Header({ Name = "📰 News & Updates" })
+    
+    local function loadNews()
+        NewsTab:ClearSections()
+        local newsContent = NewsTab:Section({ Side = "Left" })
+        newsContent:Header({ Name = "Latest Updates" })
+        
+        local success, res = pcall(game.HttpGet, game,
+            "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/main/announcementsChangelogs.json", true)
+        
+        if not success then
+            newsContent:Label({ Text = "❌ Failed to fetch news. Check connection." })
+            return
+        end
+        
+        local ok, data = pcall(HttpService.JSONDecode, HttpService, res)
+        if not ok or not data then
+            newsContent:Label({ Text = "❌ Invalid news data." })
+            return
+        end
+        
+        if data.announcement then
+            newsContent:Label({ Text = "📢 Announcement: " .. data.announcement })
+            newsContent:Divider()
+        end
+        
+        if data.changelog then
+            newsContent:Label({ Text = "📝 Changelog: " .. data.changelog })
+        end
     end
-    local data = HttpService:JSONDecode(res)
-    if data.announcement then NewsSec:Label("📢 "..data.announcement) end
-    if data.changelog then NewsSec:Label("📝 "..data.changelog) end
+    
+    loadNews()
+    
+    -- Auto-refresh news every 5 minutes
+    task.spawn(function()
+        while true do
+            task.wait(300)
+            loadNews()
+        end
+    end)
+    
+    ------------------------
+    -- SELECT HOME TAB BY DEFAULT
+    ------------------------
+    HomeTab:Select()
+    
+    ------------------------
+    -- CONFIG SYSTEM
+    ------------------------
+    MacLib:SetFolder("ExperienceGui")
+    NeedsTab:InsertConfigSection("Left")
+    
+    ------------------------
+    -- WINDOW UNLOAD EVENT
+    ------------------------
+    Window.onUnloaded(function()
+        print("ExperienceGui unloaded")
+    end)
+    
+    -- Load any saved config
+    MacLib:LoadAutoLoadConfig()
+    
+    Window:Notify({
+        Title = "✅ ExperienceGui",
+        Description = "Successfully loaded!",
+        Lifetime = 3
+    })
+    
+    print("Main UI created successfully!")
 end
 
-loadNews()
-task.spawn(function()
-    while true do task.wait(300) loadNews() end
-end)
+-- If already authenticated, create main UI immediately
+if authenticated then
+    createMainUI()
+end
 
 return Window
