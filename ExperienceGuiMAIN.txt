@@ -1,4 +1,4 @@
--- experienceguimain | Version 3.0.3 | CONVERTED TO MACLIB
+-- experienceguimain | Version 3.0.3 | MACLIB FIXED VERSION
 
 local function StartExperienceGui()
     local HttpService = game:GetService("HttpService")
@@ -12,10 +12,10 @@ local function StartExperienceGui()
         end
     end
 
-    -- Load MacLib instead of Rayfield
+    -- Load MacLib
     local MacLib = loadstring(game:HttpGet("https://github.com/biggaboy212/Maclib/releases/latest/download/maclib.txt"))()
 
-    -- Create Window with MacLib (similar structure)
+    -- Create Window with rounded corners style
     local Window = MacLib:Window({
         Title = "ExperienceGui",
         Subtitle = "Made by CoolDown | MacLib",
@@ -23,10 +23,11 @@ local function StartExperienceGui()
         DragStyle = 1,
         ShowUserInfo = true,
         Keybind = Enum.KeyCode.RightControl,
-        AcrylicBlur = true
+        AcrylicBlur = true,
+        Rounding = 8, -- Added for rounded corners
     })
 
-    -- Set theme to match your original style
+    -- Set theme with accent color
     Window.Settings.Theme = {
         Accent = Color3.fromRGB(85, 160, 255),
         Background = Color3.fromRGB(12, 15, 22),
@@ -38,74 +39,85 @@ local function StartExperienceGui()
     Window:SetScale(1.07)
     Window:SetAcrylicBlurState(true)
 
-    ------------------------
-    -- KEY SYSTEM (Converted from Rayfield's KeySystem)
-    ------------------------
-    local VALID_KEYS = {"CoolDownExperience"}
-    local keyPassed = false
-    
-    -- Create auth tab (blocking)
-    local authTabGroup = Window:TabGroup()
-    local authTab = authTabGroup:Tab({ 
-        Name = "🔒 AUTHENTICATION", 
-        Image = "rbxassetid://10734950309" 
-    })
-    local authSection = authTab:Section({ Side = "Left" })
-    
-    authSection:Header({ Name = "ExperienceGui Access" })
-    authSection:Label({ Text = "Enter Password" })
-    authSection:Label({ Text = "Password required to continue" })
-    
-    local keyInput = ""
-    local keyInputElement = authSection:Input({
-        Name = "Password",
-        Placeholder = "Enter password here",
-        Callback = function(input)
-            keyInput = input
-        end
-    })
-    
-    authSection:Button({
-        Name = "🔓 Authenticate",
-        Callback = function()
-            -- Check if key is valid
-            local isValid = false
-            for _, validKey in ipairs(VALID_KEYS) do
-                if keyInput == validKey then
-                    isValid = true
-                    break
-                end
-            end
-            
-            if isValid then
-                keyPassed = true
-                Window:Notify({
-                    Title = "✅ Access Granted",
-                    Description = "Welcome to ExperienceGui!",
-                    Lifetime = 3
-                })
-                -- Remove auth tab and create main UI
-                authTabGroup:Remove()
-                createMainUI()
-            else
-                Window:Notify({
-                    Title = "❌ Invalid Password",
-                    Description = "Please check your password and try again",
-                    Lifetime = 3
-                })
-                keyInputElement:Set("")
-                keyInput = ""
-            end
-        end
-    })
-    
-    -- If auth fails, return early
-    if not keyPassed then
-        return Window
+    -- Apply additional rounding to window elements
+    if Window.ApplyRounding then
+        Window:ApplyRounding(12) -- More rounded corners
     end
 
     ------------------------
-    -- MAIN UI CREATION FUNCTION (Only called after successful auth)
+    -- GLOBAL VARIABLES
+    ------------------------
+    local keyPassed = false
+    local VALID_KEYS = {"CoolDownExperience"}
+    local authTabGroup = nil
+    local MainTabGroup, ScriptTabGroup, NewsTabGroup = nil, nil, nil
+
+    ------------------------
+    -- AUTHENTICATION FUNCTION
+    ------------------------
+    local function showAuthUI()
+        -- Create auth tab group
+        authTabGroup = Window:TabGroup()
+        local authTab = authTabGroup:Tab({ 
+            Name = "🔒 AUTHENTICATION", 
+            Image = "rbxassetid://10734950309" 
+        })
+        local authSection = authTab:Section({ Side = "Left" })
+        
+        authSection:Header({ Name = "ExperienceGui Access" })
+        authSection:Label({ Text = "Enter Password" })
+        authSection:Label({ Text = "Password required to continue" })
+        
+        local keyInput = ""
+        local keyInputElement = authSection:Input({
+            Name = "Password",
+            Placeholder = "Enter password here",
+            Callback = function(input)
+                keyInput = input
+            end
+        })
+        
+        authSection:Button({
+            Name = "🔓 Authenticate",
+            Callback = function()
+                -- Check if key is valid
+                local isValid = false
+                for _, validKey in ipairs(VALID_KEYS) do
+                    if keyInput == validKey then
+                        isValid = true
+                        break
+                    end
+                end
+                
+                if isValid then
+                    keyPassed = true
+                    Window:Notify({
+                        Title = "✅ Access Granted",
+                        Description = "Welcome to ExperienceGui!",
+                        Lifetime = 3
+                    })
+                    -- Remove auth tab
+                    authTabGroup:Remove()
+                    authTabGroup = nil
+                    -- Create main UI
+                    createMainUI()
+                else
+                    Window:Notify({
+                        Title = "❌ Invalid Password",
+                        Description = "Please check your password and try again",
+                        Lifetime = 3
+                    })
+                    keyInputElement:Set("")
+                    keyInput = ""
+                end
+            end
+        })
+        
+        authTab:Select() -- Select the auth tab by default
+    end
+
+    ------------------------
+    -- MAIN UI CREATION FUNCTION
     ------------------------
     local function createMainUI()
         print("Creating main UI...")
@@ -113,17 +125,17 @@ local function StartExperienceGui()
         ------------------------
         -- CREATE TAB GROUPS
         ------------------------
-        local MainTabGroup = Window:TabGroup()
-        local ScriptTabGroup = Window:TabGroup()
-        local NewsTabGroup = Window:TabGroup()
+        MainTabGroup = Window:TabGroup()
+        ScriptTabGroup = Window:TabGroup()
+        NewsTabGroup = Window:TabGroup()
         
-        -- Create tabs (using Image parameter instead of Icon)
+        -- Create tabs
         local HomeTab = MainTabGroup:Tab({ Name = "Home", Image = "rbxassetid://18821914323" })
         local NeedsTab = MainTabGroup:Tab({ Name = "Basic Needs", Image = "rbxassetid://10734950309" })
         local ScriptsTab = MainTabGroup:Tab({ Name = "Script Library", Image = "rbxassetid://10734950309" })
-        local ExecTab = MainTabGroup:Tab({ Name = "Script Executor", Image = "rbxassetid://10734950309" })
-        local ScriptBloxTab = MainTabGroup:Tab({ Name = "ScriptBlox", Image = "rbxassetid://10734950309" })
-        local FavoritesTab = MainTabGroup:Tab({ Name = "Favorites", Image = "rbxassetid://10734950309" })
+        local ExecTab = ScriptTabGroup:Tab({ Name = "Script Executor", Image = "rbxassetid://10734950309" })
+        local ScriptBloxTab = ScriptTabGroup:Tab({ Name = "ScriptBlox", Image = "rbxassetid://10734950309" })
+        local FavoritesTab = ScriptTabGroup:Tab({ Name = "Favorites", Image = "rbxassetid://10734950309" })
         local AnnTab = NewsTabGroup:Tab({ Name = "News", Image = "rbxassetid://10734950309" })
         
         ------------------------
@@ -133,7 +145,7 @@ local function StartExperienceGui()
         HomeSection:Header({ Name = "Welcome to ExperienceGui" })
         HomeSection:Label({ Text = "Made by CoolDown" })
         
-        -- Get version from config (your original code)
+        -- Get version from config
         local version = "Unknown"
         local ok, result = pcall(function()
             return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json")
@@ -149,9 +161,10 @@ local function StartExperienceGui()
         
         HomeSection:Label({ Text = "Client: " .. LocalPlayer.Name })
         HomeSection:Label({ Text = "Version " .. version })
+        HomeSection:Label({ Text = "✅ Authenticated Successfully" })
         
         ------------------------
-        -- BASIC NEEDS TAB (Your original functionality)
+        -- BASIC NEEDS TAB
         ------------------------
         local NeedsSection = NeedsTab:Section({ Side = "Left" })
         
@@ -194,7 +207,7 @@ local function StartExperienceGui()
         })
         
         ------------------------
-        -- SCRIPT EXECUTOR TAB (Your original functionality)
+        -- SCRIPT EXECUTOR TAB
         ------------------------
         local ExecSection = ExecTab:Section({ Side = "Left" })
         ExecSection:Header({ Name = "Run Custom Code" })
@@ -267,7 +280,7 @@ local function StartExperienceGui()
         })
         
         ------------------------
-        -- SCRIPT LIBRARY (Your original functionality)
+        -- SCRIPT LIBRARY
         ------------------------
         local ScriptsSection = ScriptsTab:Section({ Side = "Left" })
         
@@ -312,6 +325,12 @@ local function StartExperienceGui()
                                     Description = "Failed to load: " .. (scriptData.name or "script"),
                                     Lifetime = 5
                                 })
+                            else
+                                Window:Notify({
+                                    Title = "✅ Script Loaded",
+                                    Description = "Successfully loaded: " .. (scriptData.name or "script"),
+                                    Lifetime = 3
+                                })
                             end
                         elseif scriptData.code then
                             local ok, err = pcall(function()
@@ -323,6 +342,12 @@ local function StartExperienceGui()
                                     Title = "Script Error",
                                     Description = "Failed to execute: " .. (scriptData.name or "script"),
                                     Lifetime = 5
+                                })
+                            else
+                                Window:Notify({
+                                    Title = "✅ Script Executed",
+                                    Description = "Successfully executed: " .. (scriptData.name or "script"),
+                                    Lifetime = 3
                                 })
                             end
                         else
@@ -340,17 +365,14 @@ local function StartExperienceGui()
         end)
         
         ------------------------
-        -- SCRIPTBLOX + FAVORITES (Your original functionality)
+        -- SCRIPTBLOX + FAVORITES SYSTEM
         ------------------------
-        -- Saved favorites file and table
+        -- Saved favorites
         local savedScripts = {}
         local savedFile = "ExperienceGui/SavedScripts.json"
         
-        -- Helper: read saved file
         local function LoadSavedScriptsFromFile()
-            if type(readfile) ~= "function" then
-                return
-            end
+            if type(readfile) ~= "function" then return end
             local ok, content = pcall(function() return readfile(savedFile) end)
             if ok and content and content ~= "" then
                 local sOk, data = pcall(function() return HttpService:JSONDecode(content) end)
@@ -360,24 +382,20 @@ local function StartExperienceGui()
             end
         end
         
-        -- Helper: write saved file
         local function SaveScriptsToFile()
-            if type(writefile) ~= "function" then
-                return
-            end
+            if type(writefile) ~= "function" then return end
             local ok, json = pcall(function() return HttpService:JSONEncode(savedScripts) end)
-            if ok then
-                pcall(function() writefile(savedFile, json) end)
-            end
+            if ok then pcall(function() writefile(savedFile, json) end) end
         end
         
-        -- Refresh Favorites UI
         local function RefreshFavoritesUI()
             FavoritesTab:ClearSections()
             local FavSection = FavoritesTab:Section({ Side = "Left" })
+            FavSection:Header({ Name = "⭐ Favorites" })
             
             if #savedScripts == 0 then
                 FavSection:Label({ Text = "⚠️ No favorites saved yet" })
+                FavSection:Label({ Text = "Save scripts from ScriptBlox or Library!" })
                 return
             end
             
@@ -403,25 +421,36 @@ local function StartExperienceGui()
                                 Description = "Failed to run: " .. title,
                                 Lifetime = 5
                             })
+                        else
+                            Window:Notify({
+                                Title = "✅ Favorite Loaded",
+                                Description = "Successfully loaded: " .. title,
+                                Lifetime = 3
+                            })
                         end
                     end
                 })
+                
                 FavSection:Button({
-                    Name = "✖ Remove: "..title,
+                    Name = "🗑️ Remove",
                     Callback = function()
                         table.remove(savedScripts, i)
                         SaveScriptsToFile()
                         RefreshFavoritesUI()
+                        Window:Notify({
+                            Title = "✅ Removed",
+                            Description = "Removed from favorites: " .. title,
+                            Lifetime = 3
+                        })
                     end
                 })
+                
                 FavSection:Divider()
             end
         end
         
-        -- Save a favorite
         local function SaveFavorite(entry)
             entry = entry or {}
-            -- simple duplicate check by url or title
             for _, e in ipairs(savedScripts) do
                 if entry.url and e.url == entry.url then return end
                 if entry.title and e.title == entry.title and (entry.code == e.code) then return end
@@ -431,22 +460,18 @@ local function StartExperienceGui()
             RefreshFavoritesUI()
         end
         
-        -- Ping check
         local function MeasurePing(timeoutSeconds)
             timeoutSeconds = timeoutSeconds or 5
             local apiProbe = "https://scriptblox.com/api/script/search?limit=1&sort=trending"
             local startTime = os.clock()
             local ok, _ = pcall(function()
-                local resp = game:HttpGet(apiProbe, true)
+                game:HttpGet(apiProbe, true)
             end)
             local elapsed = os.clock() - startTime
-            if not ok then
-                return nil
-            end
+            if not ok then return nil end
             return elapsed
         end
         
-        -- URL encode
         local function UrlEncode(s)
             if type(s) ~= "string" then return "" end
             local ok, enc = pcall(function() return HttpService:UrlEncode(s) end)
@@ -456,7 +481,6 @@ local function StartExperienceGui()
             return s
         end
         
-        -- Core: perform search on ScriptBlox
         local function SearchScriptBlox(query, limit)
             limit = limit or 20
             local q = query or ""
@@ -469,23 +493,19 @@ local function StartExperienceGui()
             end
 
             local ok, response = pcall(function() return game:HttpGet(url, true) end)
-            if not ok then
-                return nil, ("HTTP GET failed: %s"):format(tostring(response))
-            end
+            if not ok then return nil, ("HTTP GET failed: %s"):format(tostring(response)) end
             local decOk, data = pcall(function() return HttpService:JSONDecode(response) end)
-            if not decOk then
-                return nil, ("JSON decode failed: %s"):format(tostring(data))
-            end
+            if not decOk then return nil, ("JSON decode failed: %s"):format(tostring(data)) end
             if not data or not data.result or not data.result.scripts then
                 return nil, "No scripts in response"
             end
             return data.result.scripts, nil
         end
         
-        -- Render search results
         local function RenderScriptBloxResults(scripts)
             ScriptBloxTab:ClearSections()
             local SBSection = ScriptBloxTab:Section({ Side = "Left" })
+            SBSection:Header({ Name = "Search Results" })
             
             if not scripts or #scripts == 0 then
                 SBSection:Label({ Text = "⚠️ No scripts found" })
@@ -497,7 +517,6 @@ local function StartExperienceGui()
                 local gameName = (info.game and info.game.name) or "Unknown Game"
                 local display = ("[%s] %s"):format(gameName, title)
 
-                -- Execute button
                 SBSection:Button({
                     Name = "▶ "..display,
                     Callback = function()
@@ -511,39 +530,35 @@ local function StartExperienceGui()
                                     Description = "Failed to execute: " .. title,
                                     Lifetime = 5
                                 })
+                            else
+                                executed = true
                             end
-                            executed = true
                         elseif info.scriptUrl and type(info.scriptUrl) == "string" then
                             local ok, err = pcall(function()
                                 local scriptText = game:HttpGet(info.scriptUrl, true)
                                 loadstring(scriptText)()
                             end)
                             if not ok then 
-                                warn("Failed to fetch/execute script at url:", (info.scriptUrl or "nil"), err)
+                                warn("Failed to fetch/execute script:", title, err)
                                 Window:Notify({
                                     Title = "Script Error",
                                     Description = "Failed to load from URL",
                                     Lifetime = 5
                                 })
-                            end
-                            executed = true
-                        elseif info.script_id or info._id then
-                            local id = info.script_id or info._id
-                            local ok, detailResp = pcall(function()
-                                return game:HttpGet(("https://scriptblox.com/api/script/%s"):format(tostring(id)), true)
-                            end)
-                            if ok then
-                                local dec, det = pcall(function() return HttpService:JSONDecode(detailResp) end)
-                                if dec and det and det.result and det.result.script and type(det.result.script) == "string" then
-                                    pcall(function() loadstring(det.result.script)() end)
-                                    executed = true
-                                end
+                            else
+                                executed = true
                             end
                         end
-                        if not executed then
-                            warn("Unable to execute script:", title)
+                        
+                        if executed then
                             Window:Notify({
-                                Title = "Script Error",
+                                Title = "✅ Script Loaded",
+                                Description = "Successfully loaded: " .. title,
+                                Lifetime = 3
+                            })
+                        else
+                            Window:Notify({
+                                Title = "❌ Failed to Load",
                                 Description = "Unable to execute: " .. title,
                                 Lifetime = 5
                             })
@@ -551,9 +566,8 @@ local function StartExperienceGui()
                     end
                 })
 
-                -- Save button
                 SBSection:Button({
-                    Name = "💾 Save: "..display,
+                    Name = "⭐ Save to Favorites",
                     Callback = function()
                         local entry = {
                             title = title,
@@ -575,59 +589,33 @@ local function StartExperienceGui()
             end
         end
         
-        -- Create ScriptBlox UI
+        -- ScriptBlox UI
         local SBMainSection = ScriptBloxTab:Section({ Side = "Left" })
         SBMainSection:Header({ Name = "ScriptBlox Search" })
         
         local searchQuery = ""
-        local liveSearchEnabled = false
-        local pingThreshold = 0.35
-        local lastSearchTick = 0
-        local liveDebounce = 0.5
-        
         local searchInputElement = SBMainSection:Input({
             Name = "Search Query",
             Placeholder = "Type keywords to search ScriptBlox...",
             Callback = function(text)
                 searchQuery = text or ""
-                local measureOk, ping = pcall(function() return MeasurePing() end)
-                if measureOk and type(ping) == "number" and ping > 0 and ping <= pingThreshold then
-                    liveSearchEnabled = true
-                else
-                    liveSearchEnabled = false
-                end
-
-                if liveSearchEnabled then
-                    local now = tick()
-                    if now - lastSearchTick < liveDebounce then
-                        return
-                    end
-                    lastSearchTick = now
-                    task.spawn(function()
-                        local scripts, err = SearchScriptBlox(searchQuery, 15)
-                        if not scripts then
-                            ScriptBloxTab:ClearSections()
-                            local ErrSection = ScriptBloxTab:Section({ Side = "Left" })
-                            ErrSection:Label({ Text = "⚠️ Search failed: "..tostring(err) })
-                            return
-                        end
-                        RenderScriptBloxResults(scripts)
-                    end)
-                end
             end
         })
         
         SBMainSection:Button({
-            Name = "Search (manual)",
+            Name = "🔍 Search ScriptBlox",
             Callback = function()
+                ScriptBloxTab:ClearSections()
                 local LoadingSection = ScriptBloxTab:Section({ Side = "Left" })
                 LoadingSection:Label({ Text = "Searching ScriptBlox..." })
+                
                 task.spawn(function()
                     local scripts, err = SearchScriptBlox(searchQuery, 25)
                     if not scripts then
                         ScriptBloxTab:ClearSections()
                         local ErrSection = ScriptBloxTab:Section({ Side = "Left" })
-                        ErrSection:Label({ Text = "⚠️ Search failed: "..tostring(err) })
+                        ErrSection:Header({ Name = "Search Failed" })
+                        ErrSection:Label({ Text = "Error: "..tostring(err) })
                         return
                     end
                     RenderScriptBloxResults(scripts)
@@ -636,16 +624,19 @@ local function StartExperienceGui()
         })
         
         SBMainSection:Button({
-            Name = "Load Trending",
+            Name = "📈 Load Trending",
             Callback = function()
+                ScriptBloxTab:ClearSections()
                 local LoadingSection = ScriptBloxTab:Section({ Side = "Left" })
                 LoadingSection:Label({ Text = "Loading trending scripts..." })
+                
                 task.spawn(function()
                     local scripts, err = SearchScriptBlox("", 25)
                     if not scripts then
                         ScriptBloxTab:ClearSections()
                         local ErrSection = ScriptBloxTab:Section({ Side = "Left" })
-                        ErrSection:Label({ Text = "⚠️ Trending load failed: "..tostring(err) })
+                        ErrSection:Header({ Name = "Failed to Load" })
+                        ErrSection:Label({ Text = "Error: "..tostring(err) })
                         return
                     end
                     RenderScriptBloxResults(scripts)
@@ -653,42 +644,34 @@ local function StartExperienceGui()
             end
         })
         
-        -- Initial load
+        -- Initial trending load
         task.spawn(function()
-            local ping = nil
-            local ok, res = pcall(function() ping = MeasurePing() end)
-            if ok and type(ping) == "number" and ping > 0 and ping <= pingThreshold then
-                local scripts, err = SearchScriptBlox("", 20)
-                if scripts then
-                    RenderScriptBloxResults(scripts)
-                else
-                    SBMainSection:Label({ Text = "⚠️ Failed to load trending: "..tostring(err) })
-                end
+            local scripts, err = SearchScriptBlox("", 20)
+            if scripts then
+                RenderScriptBloxResults(scripts)
             else
-                SBMainSection:Label({ Text = "Manual mode: press Search (manual) after typing query (slow ping or probe failed)." })
+                SBMainSection:Label({ Text = "Note: Use buttons above to search ScriptBlox" })
             end
         end)
         
-        -- Load saved favorites
+        -- Load favorites
         LoadSavedScriptsFromFile()
         RefreshFavoritesUI()
         
         ------------------------
-        -- NEWS TAB (Your original functionality)
+        -- NEWS TAB
         ------------------------
-        local AnnSection = AnnTab:Section({ Side = "Left" })
-        local announcementsUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/announcementsChangelogs.json"
-        
         local function LoadAnnouncements()
             AnnTab:ClearSections()
             local NewsSection = AnnTab:Section({ Side = "Left" })
+            NewsSection:Header({ Name = "📰 News & Updates" })
             
             local success, result = pcall(function()
-                return game:HttpGet(announcementsUrl, true)
+                return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/announcementsChangelogs.json", true)
             end)
+            
             if not success then
                 NewsSection:Label({ Text = "⚠️ Failed to fetch announcements" })
-                warn("HTTP GET failed:", result)
                 return
             end
 
@@ -696,27 +679,23 @@ local function StartExperienceGui()
             local decodeSuccess, decodeResult = pcall(function()
                 return HttpService:JSONDecode(result)
             end)
+            
             if not decodeSuccess then
                 NewsSection:Label({ Text = "⚠️ Failed to decode announcements" })
-                warn("JSON Decode failed:", decodeResult)
                 return
             end
 
             data = decodeResult
             if data.announcement then
-                NewsSection:Label({ Text = "📢 " .. data.announcement })
-            else
-                NewsSection:Label({ Text = "📢 No announcement at this time" })
+                NewsSection:Label({ Text = "📢 Announcement: " .. data.announcement })
+                NewsSection:Divider()
             end
 
             if data.changelog then
-                NewsSection:Label({ Text = "📝 " .. data.changelog })
-            else
-                NewsSection:Label({ Text = "📝 No changelog available" })
+                NewsSection:Label({ Text = "📝 Changelog: " .. data.changelog })
             end
         end
         
-        -- Initial load and periodic refresh
         LoadAnnouncements()
         task.spawn(function()
             while true do
@@ -726,38 +705,38 @@ local function StartExperienceGui()
         end)
         
         ------------------------
-        -- AUTORUN (Your original code)
+        -- AUTORUN
         ------------------------
         task.spawn(function()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
         end)
         
         ------------------------
-        -- SELECT HOME TAB BY DEFAULT
+        -- SELECT HOME TAB
         ------------------------
         HomeTab:Select()
         
         ------------------------
-        -- WINDOW UNLOAD EVENT
+        -- FINAL NOTIFICATION
         ------------------------
-        Window.onUnloaded(function()
-            print("ExperienceGui unloaded")
-        end)
-        
         Window:Notify({
             Title = "✅ ExperienceGui",
             Description = "Successfully loaded with MacLib!",
             Lifetime = 3
         })
+        
+        print("✅ Main UI created successfully!")
     end
+
+    ------------------------
+    -- INITIALIZATION
+    ------------------------
+    -- Always show auth UI first
+    showAuthUI()
     
-    -- If auth was already passed (somehow), create main UI
-    if keyPassed then
-        createMainUI()
-    end
-    
+    -- Return the window
     return Window
 end
 
--- Call function and return for loader
+-- Start the GUI
 return StartExperienceGui()
