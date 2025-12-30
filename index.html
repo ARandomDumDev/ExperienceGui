@@ -8,36 +8,26 @@
 </head>
 <body>
 
-  <div class="bg-pattern"></div>
+  <!-- Floating shapes -->
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
 
-  <div id="auth-screen" class="auth-screen">
-    <div class="glass-card">
-      <h2>Enter Passcode</h2>
-      <input type="password" id="pass" placeholder="Passcode">
-      <button id="auth-btn">Unlock</button>
-      <p id="auth-error"></p>
-    </div>
+  <!-- Platform selector -->
+  <div class="platform-bar">
+    <button class="platform active">iOS</button>
+    <button class="platform">Android</button>
+    <button class="platform">Windows</button>
   </div>
 
-  <main id="main-content" class="hidden">
-    <section class="hero reveal">
-      <h1>ExperienceExecutor</h1>
-      <p>Download for Android, iOS, and Windows.</p>
-    </section>
+  <!-- Hero -->
+  <main class="hero">
+    <div class="glass-strip">
+      <h1>ExperienceExecutor for iOS?</h1>
+      <p>we gotchu!</p>
+    </div>
 
-    <section class="download-section reveal">
-      <div class="glass-card">
-        <button class="dl-btn" data-key="android">Android</button>
-        <button class="dl-btn" data-key="ios">iOS</button>
-        <button class="dl-btn" data-key="windows">Windows</button>
-      </div>
-    </section>
-
-    <footer class="reveal">
-      <p>Made with RandomaticStudios</p>
-    </footer>
+    <button class="install-btn">Install</button>
   </main>
 
-<script src="script.js"></script>
 </body>
 </html>
