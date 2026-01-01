@@ -1,171 +1,73 @@
--- EXPERIENCE UI LOADER | We are going closed-source soon
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- URLs
-local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
-local scriptUrlOriginal = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
-local scriptUrlBeta = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Beforeupdate.lua"
+local Window = Rayfield:CreateWindow({
+   Name = "Experience GUI",
+   LoadingTitle = "Loading Experience GUI",
+   LoadingSubtitle = "by ARandomDumDev",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil,
+      FileName = "ExperienceGuiConfig"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvitelink",
+      RemoteEventAccess = true
+   },
+   KeySystem = false,
+   KeySettings = {
+      Title = "Untitled",
+      Subtitle = "Subtitle",
+      Note = "Note",
+      FileName = "Key",
+      SaveKey = true,
+      SavePath = "roblox/settings",
+      ModifiedCallback = function(Key) end
+   }
+})
 
--- Services
-local HttpService = game:GetService("HttpService")
+local Tab = Window:CreateTab("Main", 4483362458)
 
--- State
-local currentGui = nil
-local selectedUI = nil
-local hasChosenUI = false
+local Section = Tab:CreateSection("Controls")
 
--- Rayfield cache
-local Rayfield
-local function getRayfield()
-	if not Rayfield then
-		local ok, lib = pcall(function()
-			return loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-		end)
-		if not ok then
-			error("Rayfield failed to load")
-		end
-		Rayfield = lib
-	end
-	return Rayfield
-end
+Tab:CreateButton({
+   Name = "Give Experience",
+   Callback = function()
+      local player = game.Players.LocalPlayer
+      local leaderstats = player:WaitForChild("leaderstats")
+      local experience = leaderstats:WaitForChild("experience")
+      experience.Value = experience.Value + 100
+   end,
+})
 
--- Safe destroy
-local function unloadGui()
-	if currentGui then
-		if typeof(currentGui) == "Instance" then
-			currentGui:Destroy()
-		elseif type(currentGui) == "table" and currentGui.Destroy then
-			currentGui:Destroy()
-		end
-	end
-	currentGui = nil
-end
+Tab:CreateButton({
+   Name = "Reset Experience",
+   Callback = function()
+      local player = game.Players.LocalPlayer
+      local leaderstats = player:WaitForChild("leaderstats")
+      local experience = leaderstats:WaitForChild("experience")
+      experience.Value = 0
+   end,
+})
 
--- Load UI safely
-local function loadGui(which)
-	unloadGui()
+Tab:CreateButton({
+   Name = "Set Experience to 1000",
+   Callback = function()
+      local player = game.Players.LocalPlayer
+      local leaderstats = player:WaitForChild("leaderstats")
+      local experience = leaderstats:WaitForChild("experience")
+      experience.Value = 1000
+   end,
+})
 
-	local url = (which == "beta") and scriptUrlBeta or scriptUrlOriginal
+Tab:CreateButton({
+   Name = "Multiply Experience by 2",
+   Callback = function()
+      local player = game.Players.LocalPlayer
+      local leaderstats = player:WaitForChild("leaderstats")
+      local experience = leaderstats:WaitForChild("experience")
+      experience.Value = experience.Value * 2
+   end,
+})
 
-	local ok, source = pcall(function()
-		return game:HttpGet(url)
-	end)
-	if not ok then
-		warn("Failed to fetch UI script:", source)
-		return
-	end
-
-	local fn, err = loadstring(source)
-	if not fn then
-		warn("loadstring failed:", err)
-		return
-	end
-
-	local result
-	local ran, execErr = pcall(function()
-		result = fn()
-	end)
-
-	if not ran then
-		warn("UI execution failed:", execErr)
-		return
-	end
-
-	if typeof(result) == "Instance" then
-		currentGui = result
-	elseif type(result) == "table" and result.Destroy then
-		currentGui = result
-	else
-		warn("UI did not return a valid destroy handle")
-	end
-end
-
--- Maintenance screen
-local function showMaintenance(message)
-	unloadGui()
-
-	local Rayfield = getRayfield()
-	local win = Rayfield:CreateWindow({
-		Name = "ExperienceGui - Maintenance",
-		LoadingTitle = "Maintenance",
-		LoadingSubtitle = "Please wait...",
-	})
-
-	win:CreateTab("Notice", 4483362458)
-		:CreateLabel(message or "Down for maintenance.")
-
-	currentGui = {
-		Destroy = function()
-			win:Destroy()
-		end
-	}
-end
-
--- UI chooser
-local function showUIChooser()
-	unloadGui()
-
-	local Rayfield = getRayfield()
-	local win = Rayfield:CreateWindow({
-		Name = "ExperienceGui",
-		LoadingTitle = "Choose UI",
-		LoadingSubtitle = "Original or Beta?",
-	})
-
-	local tab = win:CreateTab("Pick One", 4483362458)
-
-	tab:CreateButton({
-		Name = "Original UI",
-		Callback = function()
-			selectedUI = "original"
-			hasChosenUI = true
-			win:Destroy()
-			loadGui("original")
-		end
-	})
-
-	tab:CreateButton({
-		Name = "Beta UI",
-		Callback = function()
-			selectedUI = "beta"
-			hasChosenUI = true
-			win:Destroy()
-			loadGui("beta")
-		end
-	})
-
-	currentGui = {
-		Destroy = function()
-			win:Destroy()
-		end
-	}
-end
-
--- 🔥 SINGLE CONFIG CHECK (NO LOOP)
-do
-	local ok, raw = pcall(function()
-		return game:HttpGet(configUrl)
-	end)
-
-	if not ok then
-		warn("Failed to fetch config:", raw)
-		showUIChooser()
-		return
-	end
-
-	local cfg
-	local decoded, decodeErr = pcall(function()
-		cfg = HttpService:JSONDecode(raw)
-	end)
-
-	if not decoded then
-		warn("Invalid config JSON:", decodeErr)
-		showUIChooser()
-		return
-	end
-
-	if cfg and cfg.maintenance then
-		showMaintenance(cfg.message)
-	else
-		showUIChooser()
-	end
-end
+Rayfield:LoadConfiguration()
