@@ -1,73 +1,149 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- ExperienceLoader.lua
+-- Properly loads external UI scripts without destroying windows in callbacks
 
-local Window = Rayfield:CreateWindow({
-   Name = "Experience GUI",
-   LoadingTitle = "Loading Experience GUI",
-   LoadingSubtitle = "by ARandomDumDev",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil,
-      FileName = "ExperienceGuiConfig"
-   },
-   Discord = {
-      Enabled = false,
-      Invite = "noinvitelink",
-      RemoteEventAccess = true
-   },
-   KeySystem = false,
-   KeySettings = {
-      Title = "Untitled",
-      Subtitle = "Subtitle",
-      Note = "Note",
-      FileName = "Key",
-      SaveKey = true,
-      SavePath = "roblox/settings",
-      ModifiedCallback = function(Key) end
-   }
-})
+local ExperienceLoader = {}
+ExperienceLoader.__index = ExperienceLoader
 
-local Tab = Window:CreateTab("Main", 4483362458)
+function ExperienceLoader.new()
+    local self = setmetatable({}, ExperienceLoader)
+    self.loadedScripts = {}
+    self.windows = {}
+    self.callbacks = {}
+    return self
+end
 
-local Section = Tab:CreateSection("Controls")
+function ExperienceLoader:loadScript(scriptPath)
+    -- Load external script safely
+    if self.loadedScripts[scriptPath] then
+        return self.loadedScripts[scriptPath]
+    end
+    
+    local script = loadfile(scriptPath)
+    if not script then
+        error("Failed to load script: " .. scriptPath)
+    end
+    
+    self.loadedScripts[scriptPath] = script
+    return script
+end
 
-Tab:CreateButton({
-   Name = "Give Experience",
-   Callback = function()
-      local player = game.Players.LocalPlayer
-      local leaderstats = player:WaitForChild("leaderstats")
-      local experience = leaderstats:WaitForChild("experience")
-      experience.Value = experience.Value + 100
-   end,
-})
+function ExperienceLoader:createWindow(name, config)
+    -- Create a new window without destroying existing ones
+    if self.windows[name] then
+        warn("Window '" .. name .. "' already exists. Use getWindow() to retrieve it.")
+        return self.windows[name]
+    end
+    
+    local window = {
+        name = name,
+        config = config,
+        isDestroyed = false,
+        callbacks = {}
+    }
+    
+    self.windows[name] = window
+    return window
+end
 
-Tab:CreateButton({
-   Name = "Reset Experience",
-   Callback = function()
-      local player = game.Players.LocalPlayer
-      local leaderstats = player:WaitForChild("leaderstats")
-      local experience = leaderstats:WaitForChild("experience")
-      experience.Value = 0
-   end,
-})
+function ExperienceLoader:getWindow(name)
+    return self.windows[name]
+end
 
-Tab:CreateButton({
-   Name = "Set Experience to 1000",
-   Callback = function()
-      local player = game.Players.LocalPlayer
-      local leaderstats = player:WaitForChild("leaderstats")
-      local experience = leaderstats:WaitForChild("experience")
-      experience.Value = 1000
-   end,
-})
+function ExperienceLoader:registerCallback(windowName, eventName, callback)
+    -- Register a callback for a window event without destroying the window
+    if not self.windows[windowName] then
+        error("Window '" .. windowName .. "' does not exist")
+    end
+    
+    if not self.windows[windowName].callbacks[eventName] then
+        self.windows[windowName].callbacks[eventName] = {}
+    end
+    
+    table.insert(self.windows[windowName].callbacks[eventName], callback)
+end
 
-Tab:CreateButton({
-   Name = "Multiply Experience by 2",
-   Callback = function()
-      local player = game.Players.LocalPlayer
-      local leaderstats = player:WaitForChild("leaderstats")
-      local experience = leaderstats:WaitForChild("experience")
-      experience.Value = experience.Value * 2
-   end,
-})
+function ExperienceLoader:triggerCallback(windowName, eventName, ...)
+    -- Trigger callbacks for a window event without destroying the window
+    local window = self.windows[windowName]
+    if not window then
+        warn("Window '" .. windowName .. "' does not exist")
+        return
+    end
+    
+    if window.isDestroyed then
+        warn("Cannot trigger callbacks on destroyed window: " .. windowName)
+        return
+    end
+    
+    local callbacks = window.callbacks[eventName]
+    if not callbacks then
+        return
+    end
+    
+    for _, callback in ipairs(callbacks) do
+        local success, err = pcall(callback, ...)
+        if not success then
+            warn("Callback error for '" .. windowName .. "." .. eventName .. "': " .. err)
+        end
+    end
+end
 
-Rayfield:LoadConfiguration()
+function ExperienceLoader:destroyWindow(name)
+    -- Properly destroy a window without affecting others
+    local window = self.windows[name]
+    if not window then
+        warn("Window '" .. name .. "' does not exist")
+        return
+    end
+    
+    if window.isDestroyed then
+        warn("Window '" .. name .. "' is already destroyed")
+        return
+    end
+    
+    -- Clear callbacks first
+    window.callbacks = {}
+    window.isDestroyed = true
+    
+    -- Remove from windows table
+    self.windows[name] = nil
+end
+
+function ExperienceLoader:loadUI(scriptPath, windowName, config)
+    -- Load an external UI script and create a window for it
+    local script = self:loadScript(scriptPath)
+    local window = self:createWindow(windowName, config)
+    
+    -- Execute script in a safe context
+    local env = {
+        window = window,
+        loader = self,
+        registerCallback = function(eventName, callback)
+            self:registerCallback(windowName, eventName, callback)
+        end,
+        triggerCallback = function(eventName, ...)
+            self:triggerCallback(windowName, eventName, ...)
+        end
+    }
+    
+    setfenv(script, setmetatable(env, {__index = _G}))
+    
+    local success, result = pcall(script)
+    if not success then
+        self:destroyWindow(windowName)
+        error("Failed to execute UI script: " .. result)
+    end
+    
+    return window
+end
+
+function ExperienceLoader:cleanup()
+    -- Clean up all windows and scripts safely
+    for name in pairs(self.windows) do
+        self:destroyWindow(name)
+    end
+    self.loadedScripts = {}
+    self.callbacks = {}
+end
+
+return ExperienceLoader
