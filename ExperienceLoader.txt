@@ -1,126 +1,169 @@
--- EXPERIENCE UI LOADER skibdi haek
+-- EXPERIENCE UI LOADER | We are going closed-source soon
+
+-- URLs
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
 local scriptUrlOriginal = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
 local scriptUrlBeta = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Beforeupdate.lua"
 
+-- Services
 local HttpService = game:GetService("HttpService")
-local currentGui
-local currentVersion
-local isMaintenance = false
 
+-- State
+local currentGui = nil
 local selectedUI = nil
 local hasChosenUI = false
 
+-- Rayfield cache
+local Rayfield
+local function getRayfield()
+	if not Rayfield then
+		local ok, lib = pcall(function()
+			return loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+		end)
+		if not ok then
+			error("Rayfield failed to load")
+		end
+		Rayfield = lib
+	end
+	return Rayfield
+end
+
+-- Safe destroy
 local function unloadGui()
-    if currentGui and currentGui.Destroy then
-        currentGui:Destroy()
-    end
-    currentGui = nil
+	if currentGui then
+		if typeof(currentGui) == "Instance" then
+			currentGui:Destroy()
+		elseif type(currentGui) == "table" and currentGui.Destroy then
+			currentGui:Destroy()
+		end
+	end
+	currentGui = nil
 end
 
--- load a UI from URL, returns the Window or equivalent destroy handle
+-- Load UI safely
 local function loadGui(which)
-    local url
-    if which == "beta" then
-        url = scriptUrlBeta
-    else
-        url = scriptUrlOriginal
-    end
+	unloadGui()
 
-    local source = game:HttpGet(url)
-    local fn = loadstring(source)
-    currentGui = fn()
+	local url = (which == "beta") and scriptUrlBeta or scriptUrlOriginal
+
+	local ok, source = pcall(function()
+		return game:HttpGet(url)
+	end)
+	if not ok then
+		warn("Failed to fetch UI script:", source)
+		return
+	end
+
+	local fn, err = loadstring(source)
+	if not fn then
+		warn("loadstring failed:", err)
+		return
+	end
+
+	local result
+	local ran, execErr = pcall(function()
+		result = fn()
+	end)
+
+	if not ran then
+		warn("UI execution failed:", execErr)
+		return
+	end
+
+	if typeof(result) == "Instance" then
+		currentGui = result
+	elseif type(result) == "table" and result.Destroy then
+		currentGui = result
+	else
+		warn("UI did not return a valid destroy handle")
+	end
 end
 
+-- Maintenance screen
 local function showMaintenance(message)
-    unloadGui()
-    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-    local win = Rayfield:CreateWindow({
-        Name = "ExperienceGui - Maintenance",
-        LoadingTitle = "Maintenance",
-        LoadingSubtitle = "Please wait...",
-    })
-    win:CreateTab("Notice", 4483362458):CreateLabel(message or "Down for maintenance.")
-    currentGui = {
-        Destroy = function()
-            win:Destroy()
-        end
-    }
+	unloadGui()
+
+	local Rayfield = getRayfield()
+	local win = Rayfield:CreateWindow({
+		Name = "ExperienceGui - Maintenance",
+		LoadingTitle = "Maintenance",
+		LoadingSubtitle = "Please wait...",
+	})
+
+	win:CreateTab("Notice", 4483362458)
+		:CreateLabel(message or "Down for maintenance.")
+
+	currentGui = {
+		Destroy = function()
+			win:Destroy()
+		end
+	}
 end
 
+-- UI chooser
 local function showUIChooser()
-    unloadGui()
+	unloadGui()
 
-    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-    local win = Rayfield:CreateWindow({
-        Name = "ExperienceGui",
-        LoadingTitle = "Choose UI",
-        LoadingSubtitle = "Original or Beta?",
-    })
+	local Rayfield = getRayfield()
+	local win = Rayfield:CreateWindow({
+		Name = "ExperienceGui",
+		LoadingTitle = "Choose UI",
+		LoadingSubtitle = "Original or Beta?",
+	})
 
-    local tab = win:CreateTab("Pick One", 4483362458)
+	local tab = win:CreateTab("Pick One", 4483362458)
 
-    tab:CreateButton({
-        Name = "Original UI",
-        Callback = function()
-            selectedUI = "original"
-            hasChosenUI = true
-            win:Destroy()
-            loadGui("original")
-        end
-    })
+	tab:CreateButton({
+		Name = "Original UI",
+		Callback = function()
+			selectedUI = "original"
+			hasChosenUI = true
+			win:Destroy()
+			loadGui("original")
+		end
+	})
 
-    tab:CreateButton({
-        Name = "Beta UI",
-        Callback = function()
-            selectedUI = "beta"
-            hasChosenUI = true
-            win:Destroy()
-            loadGui("beta")
-        end
-    })
+	tab:CreateButton({
+		Name = "Beta UI",
+		Callback = function()
+			selectedUI = "beta"
+			hasChosenUI = true
+			win:Destroy()
+			loadGui("beta")
+		end
+	})
 
-    currentGui = {
-        Destroy = function()
-            win:Destroy()
-        end
-    }
+	currentGui = {
+		Destroy = function()
+			win:Destroy()
+		end
+	}
 end
 
--- Poll config.json
-task.spawn(function()
-    while task.wait(10) do
-        local ok, result = pcall(function()
-            return game:HttpGet(configUrl)
-        end)
+-- 🔥 SINGLE CONFIG CHECK (NO LOOP)
+do
+	local ok, raw = pcall(function()
+		return game:HttpGet(configUrl)
+	end)
 
-        if ok then
-            local cfg = HttpService:JSONDecode(result)
+	if not ok then
+		warn("Failed to fetch config")
+		return
+	end
 
-            if cfg.maintenance then
-                if not isMaintenance then
-                    showMaintenance(cfg.message)
-                    isMaintenance = true
-                end
-            else
-                if isMaintenance then
-                    unloadGui()
-                    hasChosenUI = false
-                    isMaintenance = false
-                end
+	local cfg
+	local decoded = pcall(function()
+		cfg = HttpService:JSONDecode(raw)
+	end)
 
-                if not hasChosenUI then
-                    showUIChooser()
-                    currentVersion = cfg.version
-                elseif not currentGui then
-                    loadGui(selectedUI)
-                    currentVersion = cfg.version
-                elseif cfg.version and cfg.version ~= currentVersion then
-                    unloadGui()
-                    loadGui(selectedUI)
-                    currentVersion = cfg.version
-                end
-            end
-        end
-    end
-end)
+	if not decoded then
+		warn("Invalid config JSON")
+		return
+	end
+
+	if cfg.maintenance then
+		showMaintenance(cfg.message)
+	else
+		showUIChooser()
+	end
+end
