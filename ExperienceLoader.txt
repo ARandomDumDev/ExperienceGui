@@ -147,21 +147,23 @@ do
 	end)
 
 	if not ok then
-		warn("Failed to fetch config")
+		warn("Failed to fetch config:", raw)
+		showUIChooser()
 		return
 	end
 
 	local cfg
-	local decoded = pcall(function()
+	local decoded, decodeErr = pcall(function()
 		cfg = HttpService:JSONDecode(raw)
 	end)
 
 	if not decoded then
-		warn("Invalid config JSON")
+		warn("Invalid config JSON:", decodeErr)
+		showUIChooser()
 		return
 	end
 
-	if cfg.maintenance then
+	if cfg and cfg.maintenance then
 		showMaintenance(cfg.message)
 	else
 		showUIChooser()
