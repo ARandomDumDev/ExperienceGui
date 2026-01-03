@@ -17,13 +17,13 @@
                     <key>metadata</key>
                     <dict>
                         <key>bundle-identifier</key>
-                        <string>com.gloop-de.deltamobile</string>
+                        <string>com.randomdev.executor</string>
                         <key>bundle-version</key>
                         <string>2.702.633</string>
                         <key>kind</key>
                         <string>software</string>
                         <key>title</key>
-                        <string>Delta</string>
+                        <string>ExperienceExecutor</string>
                     </dict>
                 </dict>
             </array>
