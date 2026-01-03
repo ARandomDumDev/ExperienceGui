@@ -1,5 +1,0 @@
-{
-  "android": "https://loadly.io/BUILDNUMBER.apk",
-  "ios": "https://loadly.io/BUILDNUMBER.ipa",
-  "windows": "https://loadly.io/BUILDNUMBER.exe"
-}
