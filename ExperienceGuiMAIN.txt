@@ -301,7 +301,7 @@ local function StartExperienceGui()
     -- Ping check to decide live vs manual search
     local function MeasurePing(timeoutSeconds)
         timeoutSeconds = timeoutSeconds or 5
-        local apiProbe = "https://scriptblox.com/api/script/search?limit=1&sort=trending"
+        local apiProbe = "https://scriptblox.com/api/script/trending"
         local startTime = os.clock()
         local ok, _ = pcall(function()
             local resp = game:HttpGet(apiProbe, true)
