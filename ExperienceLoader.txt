@@ -1,6 +1,6 @@
 -- ExperienceLoader 1.1
 local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
-local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
+local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.lua"
 
 local HttpService = game:GetService("HttpService")
 local currentGui
