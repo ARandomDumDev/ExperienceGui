@@ -1,149 +1,69 @@
--- ExperienceLoader.lua
--- Properly loads external UI scripts without destroying windows in callbacks
+-- ExperienceLoader 1.1
+local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
+local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.txt"
 
-local ExperienceLoader = {}
-ExperienceLoader.__index = ExperienceLoader
+local HttpService = game:GetService("HttpService")
+local currentGui
+local currentVersion
+local isMaintenance = false
 
-function ExperienceLoader.new()
-    local self = setmetatable({}, ExperienceLoader)
-    self.loadedScripts = {}
-    self.windows = {}
-    self.callbacks = {}
-    return self
+local function loadGui()
+    local source = game:HttpGet(scriptUrl)
+    local fn = loadstring(source)
+    -- GUI now returns a window object
+    currentGui = fn()
 end
 
-function ExperienceLoader:loadScript(scriptPath)
-    -- Load external script safely
-    if self.loadedScripts[scriptPath] then
-        return self.loadedScripts[scriptPath]
+local function unloadGui()
+    if currentGui and currentGui.Destroy then
+        currentGui:Destroy()
     end
-    
-    local script = loadfile(scriptPath)
-    if not script then
-        error("Failed to load script: " .. scriptPath)
-    end
-    
-    self.loadedScripts[scriptPath] = script
-    return script
+    currentGui = nil
 end
 
-function ExperienceLoader:createWindow(name, config)
-    -- Create a new window without destroying existing ones
-    if self.windows[name] then
-        warn("Window '" .. name .. "' already exists. Use getWindow() to retrieve it.")
-        return self.windows[name]
-    end
-    
-    local window = {
-        name = name,
-        config = config,
-        isDestroyed = false,
-        callbacks = {}
-    }
-    
-    self.windows[name] = window
-    return window
-end
-
-function ExperienceLoader:getWindow(name)
-    return self.windows[name]
-end
-
-function ExperienceLoader:registerCallback(windowName, eventName, callback)
-    -- Register a callback for a window event without destroying the window
-    if not self.windows[windowName] then
-        error("Window '" .. windowName .. "' does not exist")
-    end
-    
-    if not self.windows[windowName].callbacks[eventName] then
-        self.windows[windowName].callbacks[eventName] = {}
-    end
-    
-    table.insert(self.windows[windowName].callbacks[eventName], callback)
-end
-
-function ExperienceLoader:triggerCallback(windowName, eventName, ...)
-    -- Trigger callbacks for a window event without destroying the window
-    local window = self.windows[windowName]
-    if not window then
-        warn("Window '" .. windowName .. "' does not exist")
-        return
-    end
-    
-    if window.isDestroyed then
-        warn("Cannot trigger callbacks on destroyed window: " .. windowName)
-        return
-    end
-    
-    local callbacks = window.callbacks[eventName]
-    if not callbacks then
-        return
-    end
-    
-    for _, callback in ipairs(callbacks) do
-        local success, err = pcall(callback, ...)
-        if not success then
-            warn("Callback error for '" .. windowName .. "." .. eventName .. "': " .. err)
-        end
-    end
-end
-
-function ExperienceLoader:destroyWindow(name)
-    -- Properly destroy a window without affecting others
-    local window = self.windows[name]
-    if not window then
-        warn("Window '" .. name .. "' does not exist")
-        return
-    end
-    
-    if window.isDestroyed then
-        warn("Window '" .. name .. "' is already destroyed")
-        return
-    end
-    
-    -- Clear callbacks first
-    window.callbacks = {}
-    window.isDestroyed = true
-    
-    -- Remove from windows table
-    self.windows[name] = nil
-end
-
-function ExperienceLoader:loadUI(scriptPath, windowName, config)
-    -- Load an external UI script and create a window for it
-    local script = self:loadScript(scriptPath)
-    local window = self:createWindow(windowName, config)
-    
-    -- Execute script in a safe context
-    local env = {
-        window = window,
-        loader = self,
-        registerCallback = function(eventName, callback)
-            self:registerCallback(windowName, eventName, callback)
-        end,
-        triggerCallback = function(eventName, ...)
-            self:triggerCallback(windowName, eventName, ...)
+local function showMaintenance(message)
+    unloadGui()
+    local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+    local win = Rayfield:CreateWindow({
+        Name = "ExperienceGui - Maintenance",
+        LoadingTitle = "Maintenance",
+        LoadingSubtitle = "Please wait...",
+    })
+    win:CreateTab("Notice", 4483362458):CreateLabel(message or "Down for maintenance.")
+    currentGui = {
+        Destroy = function()
+            win:Destroy()
         end
     }
-    
-    setfenv(script, setmetatable(env, {__index = _G}))
-    
-    local success, result = pcall(script)
-    if not success then
-        self:destroyWindow(windowName)
-        error("Failed to execute UI script: " .. result)
-    end
-    
-    return window
 end
 
-function ExperienceLoader:cleanup()
-    -- Clean up all windows and scripts safely
-    for name in pairs(self.windows) do
-        self:destroyWindow(name)
-    end
-    self.loadedScripts = {}
-    self.callbacks = {}
-end
+-- Poll config.json
+task.spawn(function()
+    while task.wait(10) do
+        local ok, result = pcall(function()
+            return game:HttpGet(configUrl)
+        end)
 
-return ExperienceLoader
+        if ok then
+            local cfg = HttpService:JSONDecode(result)
+
+            if cfg.maintenance then
+                if not isMaintenance then
+                    showMaintenance(cfg.message)
+                    isMaintenance = true
+                end
+            else
+                if isMaintenance or not currentGui then
+                    unloadGui()
+                    loadGui()
+                    currentVersion = cfg.version
+                    isMaintenance = false
+                elseif cfg.version and cfg.version ~= currentVersion then
+                    unloadGui()
+                    loadGui()
+                    currentVersion = cfg.version
+                end
+            end
+        end
+    end
+end)
