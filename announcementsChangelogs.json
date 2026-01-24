@@ -1,4 +1,4 @@
 {
-  "announcement": "Massive Patch!",
-  "changelog": "1. Added file system safety checks - Added hasFileFunctions and hasIsFile variables to handle different executors\n2. Enhanced authentication system - Changed SaveKey = true and added multiple valid keys for better UX\n3. Added character monitoring - Automatic reapplication of WalkSpeed/JumpPower on respawn\n4. Extended speed ranges - WalkSpeed up to 500, JumpPower up to 500\n5. Added new features - Hip Height slider and Noclip toggle\n6. Improved script executor - Better error messages and input clearing\n7. Enhanced favorites system - Proper file handling and duplicate prevention\n8. Better ScriptBlox integration - Multiple API endpoint fallbacks\n9. Improved UI organization - Added sections and better labels\n10. Auto-refresh news system - Updates every 5 minutes automatically"
+  "announcement": "Had to revert due to issues.",
+  "changelog": "Unable to fetch randomapi.api"
 }
