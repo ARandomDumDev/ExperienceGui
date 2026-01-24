@@ -326,29 +326,42 @@ local function StartExperienceGui()
 
     -- Core: perform search on ScriptBlox
     local function SearchScriptBlox(query, limit)
-        limit = limit or 20
-        local q = query or ""
-        local encoded = UrlEncode(q)
-        local url
-        if q == "" then
-            url = ("https://scriptblox.com/api/script/fetch"):format(limit)
-        else
-            url = ("https://scriptblox.com/api/script/search?limit=%d&q=%s"):format(limit, encoded)
-        end
+    limit = limit or 20
+    local q = query or ""
+    local encoded = UrlEncode(q)
+    local url
 
-        local ok, response = pcall(function() return game:HttpGet(url, true) end)
-        if not ok then
-            return nil, ("HTTP GET failed: %s"):format(tostring(response))
-        end
-        local decOk, data = pcall(function() return HttpService:JSONDecode(response) end)
-        if not decOk then
-            return nil, ("JSON decode failed: %s"):format(tostring(data))
-        end
-        if not data or not data.result or not data.result.scripts then
-            return nil, "No scripts in response"
-        end
-        return data.result.scripts, nil
+    if q == "" then
+        url = ("https://scriptblox.com/api/script/fetch?limit=%d"):format(limit)
+    else
+        url = ("https://scriptblox.com/api/script/search?limit=%d&q=%s"):format(limit, encoded)
     end
+
+    local ok, response = pcall(function()
+        return game:HttpGet(url, true)
+    end)
+    if not ok then
+        return nil, ("HTTP GET failed: %s"):format(tostring(response))
+    end
+
+    local decOk, data = pcall(function()
+        return HttpService:JSONDecode(response)
+    end)
+    if not decOk then
+        return nil, ("JSON decode failed: %s"):format(tostring(data))
+    end
+
+    if not data then
+        return nil, "Empty API response"
+    end
+
+    local scripts =
+        (data.result and data.result.scripts)
+        or data.scripts
+        or {}
+
+    return scripts, nil
+end
 
     -- Render search results in ScriptBloxTab
     local function RenderScriptBloxResults(scripts)
