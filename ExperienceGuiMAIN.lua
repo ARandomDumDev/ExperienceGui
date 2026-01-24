@@ -325,10 +325,30 @@ local function StartExperienceGui()
     end
 
     -- Core: perform search on ScriptBlox
-    local function SearchScriptBlox(query, limit)
+local HttpService = game:GetService("HttpService")
+
+local function HttpGet(url)
+    local ok, response = pcall(function()
+        return HttpService:RequestAsync({
+            Url = url,
+            Method = "GET",
+            Headers = {
+                ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            }
+        })
+    end)
+
+    if not ok or not response or response.StatusCode ~= 200 then
+        return nil, ("HTTP GET failed: %s"):format(tostring(response and response.StatusCode or response))
+    end
+
+    return response.Body, nil
+end
+
+local function SearchScriptBlox(query, limit)
     limit = limit or 20
     local q = query or ""
-    local encoded = UrlEncode(q)
+    local encoded = HttpService:UrlEncode(q)
     local url
 
     if q == "" then
@@ -337,31 +357,16 @@ local function StartExperienceGui()
         url = ("https://scriptblox.com/api/script/search?limit=%d&q=%s"):format(limit, encoded)
     end
 
-    local ok, response = pcall(function()
-        return game:HttpGet(url, true)
-    end)
-    if not ok then
-        return nil, ("HTTP GET failed: %s"):format(tostring(response))
-    end
+    local body, err = HttpGet(url)
+    if not body then return nil, err end
 
-    local decOk, data = pcall(function()
-        return HttpService:JSONDecode(response)
-    end)
-    if not decOk then
-        return nil, ("JSON decode failed: %s"):format(tostring(data))
-    end
+    local success, data = pcall(HttpService.JSONDecode, HttpService, body)
+    if not success then return nil, ("JSON decode failed: %s"):format(data) end
 
-    if not data then
-        return nil, "Empty API response"
-    end
-
-    local scripts =
-        (data.result and data.result.scripts)
-        or data.scripts
-        or {}
-
+    local scripts = (data.result and data.result.scripts) or data.scripts or {}
     return scripts, nil
 end
+
 
     -- Render search results in ScriptBloxTab
     local function RenderScriptBloxResults(scripts)
