@@ -1,1 +1,9 @@
+{
+  "linux_distros": [
+    "pop",
+    "ubuntu",
+    "elementary",
+    "linuxmint"
+  ]
+}
 
