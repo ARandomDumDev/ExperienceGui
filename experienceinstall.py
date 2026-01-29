@@ -41,7 +41,7 @@ INSTRUCTIONS = {
 }
 
 RUN_COMMANDS = {
-    "Linux": ["sudo", "waydroid", "init"],
+    "Linux": ["waydroid", "init"],
     "Windows": os.path.join(DOWNLOAD_DIR, "bluestacks_installer.exe")
 }
 
@@ -55,7 +55,7 @@ PLAYWRIGHT_READY = False
 def detect_os():
     system = platform.system()
     if system == "Linux":
-        distro_name = platform.linux_distribution()[0] if hasattr(platform, "linux_distribution") else platform.platform()
+        distro_name = platform.platform()
         return "Linux", distro_name
     return system, None
 
@@ -88,7 +88,7 @@ def run_downloads(os_name, log, status):
     global DOWNLOAD_COMPLETE, PLAYWRIGHT_READY
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     os.makedirs(USR_DIR, exist_ok=True)
-    status.set("Please wait, this is normal...")
+    status.set("Downloading files, please wait...")
 
     tasks = []
     if os_name == "Windows":
@@ -115,11 +115,10 @@ def run_downloads(os_name, log, status):
         except:
             log("[*] Installing Playwright...")
             subprocess.run([shutil.which("pip3") or "pip3", "install", "playwright"], check=False)
-            PLAYWRIGHT_READY = False
-            log("[*] Please run 'playwright install' automatically...")
+            log("[*] Installing browsers (please wait, this is normal)...")
             subprocess.run([shutil.which("playwright") or "playwright", "install"], check=False)
-            PLAYWRIGHT_READY = True
             log("[*] Playwright ready. Press Install button again.")
+            PLAYWRIGHT_READY = True
         else:
             PLAYWRIGHT_READY = True
             log("[*] Playwright already installed.")
@@ -130,22 +129,25 @@ def run_downloads(os_name, log, status):
 
 def run_install(os_name, log, status):
     status.set("Running setup commands...")
-    if os_name == "Linux":
-        try:
-            subprocess.run(["sudo", "waydroid", "init"], check=True)
+    try:
+        if os_name == "Linux":
+            # Using pkexec to trigger GUI password prompt
+            log("[*] Triggering superuser prompt for Waydroid init...")
+            subprocess.run(["pkexec", "waydroid", "init"], check=True)
+            subprocess.run(["pkexec", "systemctl", "start", "waydroid-container"], check=True)
             subprocess.run(["waydroid", "session", "start"], check=True)
             status.set("Setup complete!")
             log("[*] Waydroid started. Install your APK from the 'usr' folder.")
-        except Exception as e:
-            log(f"[!] Error running setup: {e}")
-    else:
-        path = os.path.join(DOWNLOAD_DIR, "bluestacks_installer.exe")
-        if os.path.exists(path):
-            os.startfile(path)
-            status.set("BlueStacks installer launched.")
-            log("[*] Open the 'usr' folder to install delta.apk.")
         else:
-            log("[!] Installer not found.")
+            path = os.path.join(DOWNLOAD_DIR, "bluestacks_installer.exe")
+            if os.path.exists(path):
+                os.startfile(path)
+                status.set("BlueStacks installer launched.")
+                log("[*] Open the 'usr' folder to install delta.apk.")
+            else:
+                log("[!] Installer not found.")
+    except Exception as e:
+        log(f"[!] Error running setup: {e}")
 
 # =========================
 # GUI
