@@ -8,10 +8,18 @@ local currentVersion
 local isMaintenance = false
 
 local function loadGui()
-    local source = game:HttpGet(scriptUrl)
-    local fn = loadstring(source)
-    -- GUI now returns a window object
-    currentGui = fn()
+    local ok, result = pcall(function()
+        local source = game:HttpGet(scriptUrl)
+        local fn = loadstring(source)
+        -- GUI now returns a window object
+        return fn()
+    end)
+
+    if ok then
+        currentGui = result
+    else
+        warn("ExperienceLoader failed to load GUI:", result)
+    end
 end
 
 local function unloadGui()
@@ -45,7 +53,14 @@ task.spawn(function()
         end)
 
         if ok then
-            local cfg = HttpService:JSONDecode(result)
+            local decodeOk, cfg = pcall(function()
+                return HttpService:JSONDecode(result)
+            end)
+
+            if not decodeOk or type(cfg) ~= "table" then
+                warn("ExperienceLoader failed to decode config.json")
+                continue
+            end
 
             if cfg.maintenance then
                 if not isMaintenance then
@@ -67,3 +82,6 @@ task.spawn(function()
         end
     end
 end)
+
+-- Initial boot load (without waiting for the first poll interval)
+loadGui()
