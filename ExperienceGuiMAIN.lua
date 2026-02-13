@@ -96,8 +96,6 @@ local function StartExperienceGui()
         end,
     })
 
-    local AnnTabPlaceholder -- we'll insert AnnTab later; keep name for placement comment
-
     -- Version from config (keep original GitHub url)
     local version = "Unknown"
     local ok, result = pcall(function()
@@ -299,8 +297,7 @@ local function StartExperienceGui()
     end
 
     -- Ping check to decide live vs manual search
-    local function MeasurePing(timeoutSeconds)
-        timeoutSeconds = timeoutSeconds or 5
+    local function MeasurePing(_)
         local apiProbe = "https://scriptblox.com/api/script/trending"
         local startTime = os.clock()
         local ok, _ = pcall(function()
@@ -314,7 +311,7 @@ local function StartExperienceGui()
         return elapsed
     end
 
-    -- Utility: URL encode (fallback)
+    -- Utility: URL encode (fallback for compatibility)
     local function UrlEncode(s)
         if type(s) ~= "string" then return "" end
         local ok, enc = pcall(function() return HttpService:UrlEncode(s) end)
@@ -325,47 +322,54 @@ local function StartExperienceGui()
     end
 
     -- Core: perform search on ScriptBlox
-local HttpService = game:GetService("HttpService")
+    local function HttpGet(url)
+        -- Prefer RequestAsync when available (supports headers/status handling)
+        local okRequest, response = pcall(function()
+            return HttpService:RequestAsync({
+                Url = url,
+                Method = "GET",
+                Headers = {
+                    ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                }
+            })
+        end)
 
-local function HttpGet(url)
-    local ok, response = pcall(function()
-        return HttpService:RequestAsync({
-            Url = url,
-            Method = "GET",
-            Headers = {
-                ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-            }
-        })
-    end)
+        if okRequest and response and response.Success and response.StatusCode == 200 then
+            return response.Body, nil
+        end
 
-    if not ok or not response or response.StatusCode ~= 200 then
-        return nil, ("HTTP GET failed: %s"):format(tostring(response and response.StatusCode or response))
+        -- Fallback for executors that only expose game:HttpGet
+        local okGet, body = pcall(function()
+            return game:HttpGet(url, true)
+        end)
+        if okGet then
+            return body, nil
+        end
+
+        return nil, ("HTTP GET failed: %s"):format(tostring((response and response.StatusCode) or body))
     end
 
-    return response.Body, nil
-end
+    local function SearchScriptBlox(query, limit)
+        limit = limit or 20
+        local q = query or ""
+        local encoded = UrlEncode(q)
+        local url
 
-local function SearchScriptBlox(query, limit)
-    limit = limit or 20
-    local q = query or ""
-    local encoded = HttpService:UrlEncode(q)
-    local url
+        if q == "" then
+            url = ("https://scriptblox.com/api/script/fetch?limit=%d"):format(limit)
+        else
+            url = ("https://scriptblox.com/api/script/search?limit=%d&q=%s"):format(limit, encoded)
+        end
 
-    if q == "" then
-        url = ("https://scriptblox.com/api/script/fetch?limit=%d"):format(limit)
-    else
-        url = ("https://scriptblox.com/api/script/search?limit=%d&q=%s"):format(limit, encoded)
+        local body, err = HttpGet(url)
+        if not body then return nil, err end
+
+        local success, data = pcall(HttpService.JSONDecode, HttpService, body)
+        if not success then return nil, ("JSON decode failed: %s"):format(data) end
+
+        local scripts = (data.result and data.result.scripts) or data.scripts or {}
+        return scripts, nil
     end
-
-    local body, err = HttpGet(url)
-    if not body then return nil, err end
-
-    local success, data = pcall(HttpService.JSONDecode, HttpService, body)
-    if not success then return nil, ("JSON decode failed: %s"):format(data) end
-
-    local scripts = (data.result and data.result.scripts) or data.scripts or {}
-    return scripts, nil
-end
 
 
     -- Render search results in ScriptBloxTab
@@ -440,11 +444,9 @@ end
     local pingThreshold = 0.35 -- seconds; lower = more strict (tweak if you like)
     local lastSearchTick = 0
     local liveDebounce = 0.5 -- seconds between live queries
-    local liveTicker = nil
-
     -- Create UI for search
-    local SearchSection = ScriptBloxTab:CreateSection("ScriptBlox Search")
-    local SearchInput = ScriptBloxTab:CreateInput({
+    ScriptBloxTab:CreateSection("ScriptBlox Search")
+    ScriptBloxTab:CreateInput({
         Name = "Search Query",
         PlaceholderText = "Type keywords to search ScriptBlox...",
         RemoveTextAfterFocusLost = false,
