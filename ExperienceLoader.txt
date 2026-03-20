@@ -1,5 +1,5 @@
 -- ExperienceLoader 1.1
-local configUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json"
+local configUrl = "https://v0-randomaticapi.vercel.app/api/randomapi?action=get&endpoint=experienceconfig"
 local scriptUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/ExperienceGuiMAIN.lua"
 
 local HttpService = game:GetService("HttpService")
