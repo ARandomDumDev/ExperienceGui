@@ -99,7 +99,7 @@ local function StartExperienceGui()
     -- Version from config (keep original GitHub url)
     local version = "Unknown"
     local ok, result = pcall(function()
-        return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/config.json")
+        return game:HttpGet("https://v0-randomaticapi.vercel.app/api/randomapi?action=get&endpoint=experienceconfig")
     end)
     if ok then
         local decodeOk, decoded = pcall(function()
