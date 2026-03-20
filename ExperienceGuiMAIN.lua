@@ -160,7 +160,7 @@ local function StartExperienceGui()
     -- Script Library (original)
     local function LoadScriptLibrary()
         local success, result = pcall(function()
-            return game:HttpGet("https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/Scripts.json", true)
+            return game:HttpGet("https://v0-randomaticapi.vercel.app/api/randomapi?action=get&endpoint=scripts", true)
         end)
         if not success then
             ScriptsTab:CreateLabel("⚠️ Failed to fetch Scripts.txt")
