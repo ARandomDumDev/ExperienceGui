@@ -543,7 +543,7 @@ local function StartExperienceGui()
     -- Announcements (the original block — inserted after ScriptBlox/Favorites)
     ---------------------------------------------------------------------
     local AnnTab = Window:CreateTab("News", 4483362458)
-    local announcementsUrl = "https://raw.githubusercontent.com/ARandomDumDev/ExperienceGui/refs/heads/main/announcementsChangelogs.json"
+    local announcementsUrl = "https://v0-randomaticapi.vercel.app/api/randomapi?action=get&endpoint=experienceannounce"
     local announcementLabels = {}
 
     local function ClearOldLabels()
